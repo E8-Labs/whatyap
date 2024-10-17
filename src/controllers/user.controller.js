@@ -95,7 +95,7 @@ export const RegisterUser = async (req, res) => {
   const phone = req.body.phone;
   const business_website = req.body.business_website;
   const role = req.body.role || "business";
-  const driver_license_id = req.body.driver_license_id || "-1";
+  const driver_license_id = req.body.driver_license_id || "";
 
   let profile_image = null;
   let thumbnail_image = null;

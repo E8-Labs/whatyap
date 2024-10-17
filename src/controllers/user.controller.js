@@ -629,6 +629,25 @@ export const GetProfileWithUsername = async (req, res) => {
     res.send({ status: false, data: null, message: "No such user" });
   }
 };
+
+export const GetProfileMine = async (req, res) => {
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    if (authData) {
+      let userId = authData.user.id;
+      let user = await db.User.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      let resource = await UserProfileFullResource(user);
+      res.send({
+        status: true,
+        message: "User profile details",
+        data: resource,
+      });
+    }
+  });
+};
 export const CheckUsernameExists = async (req, res) => {
   let phone = req.body.username;
   // let code = req.body.code;

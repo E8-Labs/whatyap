@@ -270,15 +270,20 @@ export const AddCustomer = async (req, res) => {
       const phone = req.body.phone || "";
       const business_website = req.body.business_website || "";
       const role = "customer";
-      const driver_license_id = req.body.driver_license_id || "-1";
+      const driver_license_id = req.body.driver_license_id || "";
 
-      let user = await db.User.findOne({
-        where: {
-          driver_license_id: driver_license_id,
-        },
-      });
-      if (user) {
-        return res.send({ status: false, message: "Customer already present" });
+      if (req.body.driver_license_id) {
+        let user = await db.User.findOne({
+          where: {
+            driver_license_id: driver_license_id,
+          },
+        });
+        if (user) {
+          return res.send({
+            status: false,
+            message: "Customer already present",
+          });
+        }
       }
 
       let profile_image = null;

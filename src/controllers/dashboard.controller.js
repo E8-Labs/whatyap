@@ -337,7 +337,7 @@ export const AddCustomer = async (req, res) => {
         full_profile_image: profile_image,
         profile_image: thumbnail_image,
         business_website: business_website,
-        driver_license_id: driver_license_id,
+        driver_license_id: req.body.driver_license_id,
         driver_license_image: dl_image,
         addedBy: authData.user.id,
       });

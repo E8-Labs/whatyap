@@ -56,6 +56,6 @@ UserRouter.post(
 );
 UserRouter.post("/delete_media", verifyJwtToken, DeleteMedia);
 
-UserRouter.post("/my_profile", verifyJwtToken, GetProfileMine);
+UserRouter.get("/my_profile", verifyJwtToken, GetProfileMine);
 
 export default UserRouter;

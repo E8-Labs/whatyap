@@ -60,7 +60,8 @@ async function getUserData(review, currentUser = null) {
     customer: customerRes,
     createdAt: review.createdAt,
     updatedAt: review.updatedAt,
-    settlementOffer: settlementOffer,
+    settlementOfferObject: settlementOffer,
+    reviewStatus: review.reviewStatus,
   };
 
   return UserFullResource;

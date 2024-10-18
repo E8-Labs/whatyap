@@ -55,12 +55,12 @@ export const GetBusinessDashboardData = async (req, res) => {
       let customersNearby = await db.User.findAll({
         where: {
           role: "customer",
-          lat: {
-            [db.Sequelize.Op.between]: [user.lat - 0.7, user.lat + 0.7],
-          },
-          lon: {
-            [db.Sequelize.Op.between]: [user.lon - 0.7, user.lon + 0.7],
-          },
+          // lat: {
+          //   [db.Sequelize.Op.between]: [user.lat - 0.7, user.lat + 0.7],
+          // },
+          // lon: {
+          //   [db.Sequelize.Op.between]: [user.lon - 0.7, user.lon + 0.7],
+          // },
           id: {
             [db.Sequelize.Op.ne]: user.id, // Exclude the user himself
           },

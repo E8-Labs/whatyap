@@ -186,11 +186,12 @@ export const loadMessages = async (req, res) => {
 
         // Load all messages for this chat
         const messages = await db.Message.findAll({
-          where: { chatId },
+          where: { chatId: chat.id },
           //   include: [{ model: db.User, as: "User" }],
         });
+        console.log("Loading messages for ", chat.id);
         let messagesRes = await MessageResource(messages);
-        return res.status(200).send({ status: true, messagesRes });
+        return res.status(200).send({ status: true, data: messagesRes });
       } catch (err) {
         return res.status(500).send({ status: false, message: err.message });
       }

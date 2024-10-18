@@ -104,18 +104,18 @@ export const CustomersNearMe = async (req, res) => {
       let customersNearby = await db.User.findAll({
         where: {
           role: "customer",
-          lat: {
-            [db.Sequelize.Op.between]: [
-              user.lat - distance,
-              user.lat + distance,
-            ],
-          },
-          lon: {
-            [db.Sequelize.Op.between]: [
-              user.lon - distance,
-              user.lon + distance,
-            ],
-          },
+          // lat: {
+          //   [db.Sequelize.Op.between]: [
+          //     user.lat - distance,
+          //     user.lat + distance,
+          //   ],
+          // },
+          // lon: {
+          //   [db.Sequelize.Op.between]: [
+          //     user.lon - distance,
+          //     user.lon + distance,
+          //   ],
+          // },
           id: {
             [db.Sequelize.Op.ne]: user.id, // Exclude the user himself
           },

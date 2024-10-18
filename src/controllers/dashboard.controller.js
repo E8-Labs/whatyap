@@ -215,6 +215,11 @@ export const SearchUsers = async (req, res) => {
           .json({ status: false, message: "Invalid search type" });
       }
 
+      let role = req.query.role || null;
+      if (role) {
+        whereClause = { ...whereClause, role: role };
+      }
+
       try {
         // Log the search in SearchHistory
         await db.SearchHistory.create({
@@ -242,6 +247,7 @@ export const SearchUsers = async (req, res) => {
           state: user.state,
           phone: user.phone,
           email: user.email,
+          role: user.role,
         }));
         let resource = await UserProfileLiteResource(responseData);
 

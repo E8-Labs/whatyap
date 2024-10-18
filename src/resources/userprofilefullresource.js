@@ -22,7 +22,6 @@ const UserProfileFullResource = async (user, currentUser = null) => {
 };
 
 async function getUserData(user, currentUser = null) {
-  
   const UserFullResource = {
     id: user.id,
     name: user.name,
@@ -33,7 +32,19 @@ async function getUserData(user, currentUser = null) {
     city: user.city,
     state: user.state,
     role: user.role,
-    
+    username: user.username, // added this as it's part of your Sequelize model
+    driver_license_id: user.driver_license_id, // added missing fields from Sequelize model
+    driver_license_image: user.driver_license_image,
+    fcm_token: user.fcm_token,
+    business_industry: user.business_industry,
+    business_website: user.business_website,
+    business_address: user.business_address,
+    about_business: user.about_business,
+    business_employees: user.business_employees,
+    credits_available: user.credits_available,
+    lat: user.lat,
+    lon: user.lon,
+    addedBy: user.addedBy,
   };
 
   return UserFullResource;
@@ -73,15 +84,17 @@ const calculateTotalEarned = async (modelId) => {
         10
       );
       const totalDurationInMinutes = totalDurationInSeconds / 60;
-      console.log(`Duration for ${totalDurationInSeconds} sec in min ${totalDurationInMinutes}`)
-      
+      console.log(
+        `Duration for ${totalDurationInSeconds} sec in min ${totalDurationInMinutes}`
+      );
+
       // Subtract 5 minutes free per user
       const billableMinutes =
         totalDurationInMinutes > 5 ? totalDurationInMinutes - 5 : 0;
 
       // Charge $1 per minute for billable minutes
       const earnedForUser = billableMinutes * amountToChargePerMin; // $1 per minute
-      console.log(`TotalEarned ${call.userId}`, earnedForUser)
+      console.log(`TotalEarned ${call.userId}`, earnedForUser);
       totalEarned += earnedForUser;
     });
 

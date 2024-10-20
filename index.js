@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 // import nodeCron from 'node-cron'
 
 import db from "./src/models/index.js";
@@ -8,12 +9,18 @@ import db from "./src/models/index.js";
 import UserRouter from "./src/routes/user.route.js";
 import BusinessRouter from "./src/routes/dashboard.route.js";
 import ReviewRouter from "./src/routes/review.route.js";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use((req, res, next) => {
   console.log(`${req.method} request for '${req.url}'`);

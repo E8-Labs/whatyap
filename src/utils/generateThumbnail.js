@@ -43,7 +43,7 @@ export const uploadMedia = (
       ensureDirExists(docsDir);
       const docPath = path.join(docsDir, fieldname);
       fs.writeFileSync(docPath, fileContent);
-      let image = `https://www.blindcircle.com:444/voiceapp/uploads/${folder}/${fieldname}`;
+      let image = `http://185.28.22.219/whaty/uploads/${folder}/${fieldname}`;
       console.log("Pdf uploaded is ", image);
 
       resolve(image);

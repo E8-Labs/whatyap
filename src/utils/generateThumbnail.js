@@ -41,10 +41,34 @@ export const uploadMedia = (
       let dir = process.env.DocsDir; // e.g., /var/www/neo/neoapis/uploads
       const docsDir = path.join(dir + `/${folder}`);
       ensureDirExists(docsDir);
+
+      // Get the appropriate file extension based on the mime type
+      let extension = "";
+      switch (mime) {
+        case "image/jpeg":
+        case "image/jpg":
+          extension = ".jpg";
+          break;
+        case "image/png":
+          extension = ".png";
+          break;
+        case "image/gif":
+          extension = ".gif";
+          break;
+        default:
+          extension = ""; // If you want to handle more types, add cases here
+      }
+
+      // Check if the fieldname already has an extension
+      if (!path.extname(fieldname)) {
+        // Append the extension if it's missing
+        fieldname += extension;
+      }
+
       const docPath = path.join(docsDir, fieldname);
       fs.writeFileSync(docPath, fileContent);
       let image = `http://185.28.22.219/whaty/uploads/${folder}/${fieldname}`;
-      console.log("Pdf uploaded is ", image);
+      console.log("File uploaded is ", image);
 
       resolve(image);
     } catch (error) {

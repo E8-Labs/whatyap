@@ -394,15 +394,21 @@ export const UpdateProfile = async (req, res) => {
         const mediaFilename = `${Date.now()}${mediaExt}`;
         console.log("There is a file uploaded");
 
+        image = await uploadMedia(
+          `profile_${fieldname}`,
+          mediaBuffer,
+          "image/jpeg",
+          "profile_images"
+        );
         // Ensure directories exist
-        let dir = process.env.DocsDir; // e.g., /var/www/neo/neoapis/uploads
-        const docsDir = path.join(dir + "/images");
-        ensureDirExists(docsDir);
+        // let dir = process.env.DocsDir; // e.g., /var/www/neo/neoapis/uploads
+        // const docsDir = path.join(dir + "/images");
+        // ensureDirExists(docsDir);
 
-        // Save the PDF file
-        const docPath = path.join(docsDir, mediaFilename);
-        fs.writeFileSync(docPath, mediaBuffer);
-        image = `http://185.28.22.219/whaty/uploads/images/${mediaFilename}`;
+        // // Save the PDF file
+        // const docPath = path.join(docsDir, mediaFilename);
+        // fs.writeFileSync(docPath, mediaBuffer);
+        // image = `http://185.28.22.219/whaty/uploads/images/${mediaFilename}`;
         console.log("Pdf uploaded is ", image);
 
         thumbnail = await createThumbnailAndUpload(

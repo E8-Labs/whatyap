@@ -20,6 +20,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use((req, res, next) => {
+  if (
+    req.path.endsWith(".jpg") ||
+    req.path.endsWith(".jpeg") ||
+    req.path.endsWith(".png") ||
+    req.path.endsWith(".gif")
+  ) {
+    res.setHeader("Content-Type", "image/jpeg");
+  }
+  next();
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use((req, res, next) => {

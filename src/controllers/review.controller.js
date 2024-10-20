@@ -125,6 +125,43 @@ export const DisputeReview = async (req, res) => {
   });
 };
 
+export const PaySettlementOffer = async (req, res) => {
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+
+      if (!user) {
+        return res.send({ status: false, message: "No such user" });
+      }
+
+      let settlementOfferId = req.body.settlementOfferId;
+      let reviewId = req.body.reviewId; // sent by customer
+
+      let review = await db.Review.findByPk(reviewId);
+      let settlementOffer = await db.SettlementOffer.findByPk(
+        settlementOfferId
+      );
+      if (review && settlementOffer) {
+        //process the payment when payment is integrated. For now just resolve the Review
+        review.reviewStatus = ReviewTypes.Resolved;
+        settlementOffer.status = SettlementOfferTypes.Paid;
+        let offerSaved = await settlementOffer.save();
+        let saved = await review.save();
+        if (saved) {
+          let reviewRes = await ReviewResource(review);
+          return res.send({
+            statu: true,
+            message: "Review resolved and settlement offer paid",
+            data: reviewRes,
+          });
+        }
+      } else {
+        res.send({ status: false, message: "No such review" });
+      }
+    }
+  });
+};
+
 export const SendSettlementOffer = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {

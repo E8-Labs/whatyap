@@ -654,6 +654,32 @@ export const GetProfileMine = async (req, res) => {
     }
   });
 };
+
+export const SearchHistory = async (req, res) => {
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    if (authData) {
+      let userId = authData.user.id;
+      let user = await db.User.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      let history = await db.SearchHistory.findAll({
+        where: {
+          userId: userId,
+        },
+        order: [["createdAt", "DESC"]],
+        limit: 5,
+      });
+      // let resource = await UserProfileFullResource(user);
+      res.send({
+        status: true,
+        message: "User search history",
+        data: history,
+      });
+    }
+  });
+};
 export const CheckUsernameExists = async (req, res) => {
   let phone = req.body.username;
   // let code = req.body.code;

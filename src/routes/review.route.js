@@ -6,6 +6,7 @@ import {
   LoadReviews,
   DisputeReview,
   SendSettlementOffer,
+  PaySettlementOffer,
 } from "../controllers/review.controller.js";
 
 import {
@@ -28,6 +29,12 @@ let ReviewRouter = express.Router();
 
 ReviewRouter.get("/loadReviews", verifyJwtToken, uploadFiles, LoadReviews);
 ReviewRouter.post("/disputeReview", verifyJwtToken, uploadFiles, DisputeReview);
+ReviewRouter.post(
+  "/paySettlementOffer",
+  verifyJwtToken,
+  uploadFiles,
+  PaySettlementOffer
+);
 ReviewRouter.post(
   "/sendSettlementOffer",
   verifyJwtToken,

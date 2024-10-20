@@ -18,6 +18,7 @@ import {
   UploadUserMedia,
   DeleteMedia,
   GetProfileMine,
+  SearchHistory,
 } from "../controllers/user.controller.js";
 
 const uploadFiles = multer().fields([
@@ -57,5 +58,6 @@ UserRouter.post(
 UserRouter.post("/delete_media", verifyJwtToken, DeleteMedia);
 
 UserRouter.get("/my_profile", verifyJwtToken, GetProfileMine);
+UserRouter.get("/searchHistory", verifyJwtToken, SearchHistory);
 
 export default UserRouter;

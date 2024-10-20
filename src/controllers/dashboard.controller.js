@@ -19,6 +19,7 @@ import {
 import User from "../models/auth/user.model.js";
 import UserProfileViewResource from "../resources/profileviewresource.js";
 import ReviewResource from "../resources/reviewresource.js";
+import { CreateSettlementOfferAndNullifyPast } from "./review.controller.js";
 
 export const GetBusinessDashboardData = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
@@ -432,11 +433,20 @@ export const AddReview = async (req, res) => {
       });
 
       if (created) {
+        if (settlementOffer == true) {
+          let sentOffer = await CreateSettlementOfferAndNullifyPast(created);
+          // if (sentOffer && sentOffer.status) {
+          //   return res.send({ status: true, message: "Sent Settlement Offer" });
+          // } else {
+          //   return res.send({ status: false, message: "No such review" });
+          // }
+        }
         let reviewRes = await ReviewResource(created);
         return res.send({
           status: true,
           message: "Review added",
           data: reviewRes,
+          settlementOffer: sentOffer,
         });
       }
     } else {

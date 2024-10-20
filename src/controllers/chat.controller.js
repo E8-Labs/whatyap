@@ -29,6 +29,7 @@ const createOrFindChat = async (user, review) => {
       customerId = review.customerId;
     }
 
+    let firstReply = false;
     // Check if a chat exists for this reviewId
     let chat = await db.Chat.findOne({
       where: {
@@ -46,9 +47,13 @@ const createOrFindChat = async (user, review) => {
         businessId,
         lastMessage: "", // Initialize lastMessage empty
       });
+      //if customer replies for the first time, then change the status to disputed
+      review.reviewStatus = ReviewTypes.Disputed;
+      let saved = await review.save();
+      firstReply = true;
     }
 
-    return { status: true, chat };
+    return { status: true, chat: chat, firstReply: firstReply };
   } catch (err) {
     return { status: false, message: err.message };
   }
@@ -77,12 +82,13 @@ export const sendMessage = async (req, res) => {
         let chat = await db.Chat.findOne({
           where: { reviewId, customerId: user.id },
         });
-
+        let firstReply = false;
         if (!chat) {
           // If no chat exists, create one
           let createRes = await createOrFindChat(user, review);
-          if (createRes) {
+          if (createRes && createRes.status) {
             chat = createRes.chat;
+            firstReply = createRes.firstReply || false;
           }
         }
 
@@ -99,7 +105,9 @@ export const sendMessage = async (req, res) => {
         chat.lastMessage = message;
         await chat.save();
 
-        return res.status(200).send({ status: true, message: newMessage });
+        return res
+          .status(200)
+          .send({ status: true, message: newMessage, firstReply: firstReply });
       } catch (err) {
         console.log("Error ", err);
         return res.status(200).send({ status: false, message: err.message });

@@ -22,6 +22,11 @@ const UserProfileFullResource = async (user, currentUser = null) => {
 };
 
 async function getUserData(user, currentUser = null) {
+  let media = await db.UserMedia.findAll({
+    where: {
+      userId: user.id,
+    },
+  });
   const UserFullResource = {
     id: user.id,
     name: user.name,
@@ -45,6 +50,7 @@ async function getUserData(user, currentUser = null) {
     lat: user.lat,
     lon: user.lon,
     addedBy: user.addedBy,
+    media: media,
   };
 
   return UserFullResource;

@@ -137,29 +137,38 @@ export const SendSettlementOffer = async (req, res) => {
       let settlementAmount = req.body.settlementAmount;
 
       let review = await db.Review.findByPk(reviewId);
-      if (review) {
-        let created = await db.SettlementOffer.create({
-          amount: settlementAmount,
-          userId: user.id,
-          reviewId: reviewId,
-        });
-        if (created) {
-          //set past offers null. only one offer can be active at a time.
-          let updated = await db.SettlementOffer.update(
-            { status: SettlementOfferTypes.RequestedChange },
-            {
-              where: {
-                reviewId: reviewId,
-              },
-            }
-          );
-
-          //send push to customer
-          return res.send({ status: true, message: "Sent Settlement Offer" });
-        }
+      let sentOffer = await CreateSettlementOfferAndNullifyPast(review);
+      if (sentOffer && sentOffer.status) {
+        return res.send({ status: true, message: "Sent Settlement Offer" });
       } else {
         return res.send({ status: false, message: "No such review" });
       }
     }
   });
 };
+
+export async function CreateSettlementOfferAndNullifyPast(review) {
+  if (review) {
+    let created = await db.SettlementOffer.create({
+      amount: settlementAmount,
+      userId: user.id,
+      reviewId: review.id,
+    });
+    if (created) {
+      //set past offers null. only one offer can be active at a time.
+      let updated = await db.SettlementOffer.update(
+        { status: SettlementOfferTypes.RequestedChange },
+        {
+          where: {
+            reviewId: review.id,
+          },
+        }
+      );
+
+      //send push to customer
+      return { status: true, message: "Sent Settlement Offer", offer: created };
+    } else {
+      return { status: false, message: "Send Settlement Offer Failed" };
+    }
+  }
+}

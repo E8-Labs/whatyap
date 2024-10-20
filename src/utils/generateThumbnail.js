@@ -67,7 +67,7 @@ export const uploadMedia = (
 
       const docPath = path.join(docsDir, fieldname);
       fs.writeFileSync(docPath, fileContent);
-      let image = `http://185.28.22.219/whaty/uploads/${folder}/${fieldname}`;
+      let image = `http://185.28.22.219:8006/uploads/${folder}/${fieldname}`;
       console.log("File uploaded is ", image);
 
       resolve(image);

@@ -174,7 +174,11 @@ export const SendSettlementOffer = async (req, res) => {
       let settlementAmount = req.body.settlementAmount;
 
       let review = await db.Review.findByPk(reviewId);
-      let sentOffer = await CreateSettlementOfferAndNullifyPast(review, user);
+      let sentOffer = await CreateSettlementOfferAndNullifyPast(
+        review,
+        user,
+        settlementAmount
+      );
       if (sentOffer && sentOffer.status) {
         return res.send({ status: true, message: "Sent Settlement Offer" });
       } else {
@@ -184,24 +188,28 @@ export const SendSettlementOffer = async (req, res) => {
   });
 };
 
-export async function CreateSettlementOfferAndNullifyPast(review, user) {
+export async function CreateSettlementOfferAndNullifyPast(
+  review,
+  user,
+  settlementAmount
+) {
   if (review) {
+    //set past offers null. only one offer can be active at a time.
+    let updated = await db.SettlementOffer.update(
+      { status: SettlementOfferTypes.RequestedChange },
+      {
+        where: {
+          reviewId: review.id,
+        },
+      }
+    );
+
     let created = await db.SettlementOffer.create({
       amount: settlementAmount,
       userId: user.id,
       reviewId: review.id,
     });
     if (created) {
-      //set past offers null. only one offer can be active at a time.
-      let updated = await db.SettlementOffer.update(
-        { status: SettlementOfferTypes.RequestedChange },
-        {
-          where: {
-            reviewId: review.id,
-          },
-        }
-      );
-
       //send push to customer
       return { status: true, message: "Sent Settlement Offer", offer: created };
     } else {

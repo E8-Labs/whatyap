@@ -174,7 +174,7 @@ export const SendSettlementOffer = async (req, res) => {
       let settlementAmount = req.body.settlementAmount;
 
       let review = await db.Review.findByPk(reviewId);
-      let sentOffer = await CreateSettlementOfferAndNullifyPast(review);
+      let sentOffer = await CreateSettlementOfferAndNullifyPast(review, user);
       if (sentOffer && sentOffer.status) {
         return res.send({ status: true, message: "Sent Settlement Offer" });
       } else {
@@ -184,7 +184,7 @@ export const SendSettlementOffer = async (req, res) => {
   });
 };
 
-export async function CreateSettlementOfferAndNullifyPast(review) {
+export async function CreateSettlementOfferAndNullifyPast(review, user) {
   if (review) {
     let created = await db.SettlementOffer.create({
       amount: settlementAmount,

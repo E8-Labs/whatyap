@@ -434,8 +434,12 @@ export const AddReview = async (req, res) => {
 
       if (created) {
         let sentOffer = null;
+        console.log("Check add settlement Offer", settlementOffer);
         if (settlementOffer == true) {
+          console.log("Adding settlement offer");
           sentOffer = await CreateSettlementOfferAndNullifyPast(created, user);
+          console.log("Settlement");
+          console.log(sentOffer);
           // if (sentOffer && sentOffer.status) {
           //   return res.send({ status: true, message: "Sent Settlement Offer" });
           // } else {

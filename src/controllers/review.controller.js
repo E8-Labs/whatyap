@@ -207,5 +207,10 @@ export async function CreateSettlementOfferAndNullifyPast(review, user) {
     } else {
       return { status: false, message: "Send Settlement Offer Failed" };
     }
+  } else {
+    return {
+      status: false,
+      message: "Send Settlement Offer Failed. No such review",
+    };
   }
 }

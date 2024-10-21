@@ -437,7 +437,7 @@ export const AddReview = async (req, res) => {
         console.log("Settlement offer value:", settlementOffer);
         console.log("Settlement offer type:", typeof settlementOffer);
 
-        if (settlementOffer == true) {
+        if (settlementOffer == true || settlementOffer == "true") {
           console.log("Adding settlement offer");
           sentOffer = await CreateSettlementOfferAndNullifyPast(created, user);
           console.log("Settlement");

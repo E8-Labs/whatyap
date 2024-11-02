@@ -113,10 +113,12 @@ export const sendMessage = async (req, res) => {
           otherUserId = chat.businessId;
           //current user is customer
           review.newActivityByCustomer = true;
+          review.newActivityByBusiness = false;
           let saved = await review.save();
         } else {
           //current user is business
           review.newActivityByBusiness = true;
+          review.newActivityByCustomer = false;
           let saved = await review.save();
         }
 

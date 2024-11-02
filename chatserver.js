@@ -39,7 +39,7 @@ io.on("connection", (socket) => {
 
         // Retrieve the chat
         const chat = await db.Chat.findByPk(chatId);
-
+        let review = await db.Review.findByPk(chat.reviewId);
         // Ensure the user is either the business or the customer in the chat
         if (
           chat &&
@@ -62,6 +62,18 @@ io.on("connection", (socket) => {
           console.log("Saved message to database:", savedMessage);
 
           let otherUserId = chat.customerId;
+          if (otherUserId == user.id) {
+            otherUserId = chat.businessId;
+            //current user is customer
+            review.newActivityByCustomer = true;
+            review.newActivityByBusiness = false;
+            let saved = await review.save();
+          } else {
+            //current user is business
+            review.newActivityByBusiness = true;
+            review.newActivityByCustomer = false;
+            let saved = await review.save();
+          }
           if (otherUserId == user.id) {
             otherUserId = chat.businessId;
           }

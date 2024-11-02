@@ -119,10 +119,12 @@ export const DisputeReview = async (req, res) => {
           if (otherUserId == user.id) {
             //current user is business
             review.newActivityByBusiness = true;
+            review.newActivityByCustomer = false;
             let saved = await review.save();
           } else {
             //current user is customer
             review.newActivityByCustomer = true;
+            review.newActivityByBusiness = false;
             let saved = await review.save();
           }
 
@@ -225,10 +227,12 @@ export const SendSettlementOffer = async (req, res) => {
         if (otherUserId == user.id) {
           //current user is customer
           review.newActivityByCustomer = true;
+          review.newActivityByBusiness = false;
           let saved = await review.save();
         } else {
           //current user is Business
           review.newActivityByBusiness = true;
+          review.newActivityByCustomer = false;
           let saved = await review.save();
         }
         try {

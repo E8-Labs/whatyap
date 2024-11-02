@@ -10,6 +10,7 @@ import SettlementOffer from "./review/settlementoffer.model.js";
 import Sequelize from "sequelize";
 import Chat from "./review/chat/chat.model.js";
 import Message from "./review/chat/message.model.js";
+import Notification from "./notifications/notification.model.js";
 
 const sequelize = new Sequelize(
   dbConfig.MYSQL_DB,
@@ -61,6 +62,9 @@ models["Chat"] = db.Chat;
 
 db.Message = Message(sequelize, Sequelize);
 models["Message"] = db.Message;
+
+db.Notification = Notification(sequelize, Sequelize);
+models["Notification"] = db.Notification;
 
 Object.keys(models).forEach((modelName) => {
   if (models[modelName].associate) {

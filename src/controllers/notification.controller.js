@@ -60,6 +60,7 @@ export const getUserNotifications = async (req, res) => {
     }
 
     try {
+      let offset = Number(req.query.offset) || 0;
       // Extract user ID from authenticated data
       const userId = authData.user.id;
 
@@ -73,6 +74,8 @@ export const getUserNotifications = async (req, res) => {
             attributes: ["id", "name", "username", "profile_image"], // Customize fields as needed
           },
         ],
+        offset: offset,
+        limit: 30,
         order: [["createdAt", "DESC"]],
       });
 

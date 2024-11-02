@@ -387,7 +387,8 @@ export const SearchUsers = async (req, res) => {
           .status(200)
           .json({ status: true, data: resource, message: "Search results" });
       } catch (err) {
-        return res.status(500).json({
+        console.log("Error ", error);
+        return res.status(200).json({
           status: false,
           message: "Error fetching search results",
           error: err.message,

@@ -16,6 +16,9 @@ import ReviewResource from "../resources/reviewresource.js";
 import { SettlementOfferTypes } from "../models/review/settlementoffertypes.js";
 import MessageResource from "../resources/messageresource.js";
 
+import { addNotification } from "./notification.controller.js";
+import { NotificationType } from "../models/notifications/notificationtypes.js";
+
 const createOrFindChat = async (user, review) => {
   try {
     let customerId, businessId;
@@ -104,6 +107,22 @@ export const sendMessage = async (req, res) => {
         // Update lastMessage field in chat
         chat.lastMessage = message;
         await chat.save();
+
+        let otherUserId = chat.customerId;
+        if (otherUserId == user.id) {
+          otherUserId = chat.businessId;
+        }
+        let otherUser = await db.User.findByPk(otherUserId);
+        try {
+          await addNotification({
+            fromUser: user,
+            toUser: otherUser,
+            type: NotificationType.ReplyReview,
+            productId: newMessage.id, // Optional
+          });
+        } catch (error) {
+          console.log("Error sending not sendmessage chat.controller", error);
+        }
 
         return res
           .status(200)

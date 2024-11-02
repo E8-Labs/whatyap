@@ -5,6 +5,7 @@ import http from "http"; // Importing http module
 import dotenv from "dotenv";
 import db from "./src/models/index.js"; // Adjust the import based on your directory structure
 import JWT from "jsonwebtoken";
+import { addNotification } from "./src/controllers/notification.controller.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ io.on("connection", (socket) => {
       }
 
       const userid = authData.user.id;
+      let user = await db.User.findByPk(userid);
       console.log("User is ", userid);
       try {
         const { chatId, messageContent } = message;
@@ -57,6 +59,22 @@ io.on("connection", (socket) => {
           });
 
           console.log("Saved message to database:", savedMessage);
+
+          let otherUserId = chat.customerId;
+          if (otherUserId == user.id) {
+            otherUserId = chat.businessId;
+          }
+          let otherUser = await db.User.findByPk(otherUserId);
+          try {
+            await addNotification({
+              fromUser: user,
+              toUser: otherUser,
+              type: NotificationType.TypeNewMessage,
+              productId: newMessage.id, // Optional
+            });
+          } catch (error) {
+            console.log("Error sending not sendmessage chat.controller", error);
+          }
 
           // Optionally update the lastMessage field in Chat model
           await chat.update({ lastMessage: messageContent });

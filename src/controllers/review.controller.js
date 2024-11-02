@@ -113,7 +113,7 @@ export const DisputeReview = async (req, res) => {
         if (saved) {
           let reviewRes = await ReviewResource(review);
           return res.send({
-            statu: true,
+            status: true,
             message: "Review dispute sent",
             data: reviewRes,
           });

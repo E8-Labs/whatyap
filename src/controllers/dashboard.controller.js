@@ -21,6 +21,9 @@ import UserProfileViewResource from "../resources/profileviewresource.js";
 import ReviewResource from "../resources/reviewresource.js";
 import { CreateSettlementOfferAndNullifyPast } from "./review.controller.js";
 
+import { NotificationType } from "../models/notifications/notificationtypes.js";
+import { addNotification } from "./notification.controller.js";
+
 export const GetBusinessDashboardData = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {
@@ -148,7 +151,7 @@ export const AddProfileView = async (req, res) => {
 
     if (authData) {
       const userId = authData.user.id;
-
+      let user = await db.User.findByPk(userId);
       // Check if viewedUserId is valid
       const viewedUser = await db.User.findByPk(viewedUserId);
       if (!viewedUser) {
@@ -167,6 +170,19 @@ export const AddProfileView = async (req, res) => {
 
         let viewRes = await UserProfileViewResource(view);
 
+        let otherUserId = viewedUserId;
+        let otherUser = await db.User.findByPk(otherUserId);
+
+        try {
+          await addNotification({
+            fromUser: user,
+            toUser: otherUser,
+            type: NotificationType.ProfileView,
+            productId: view.id, // Optional
+          });
+        } catch (error) {
+          console.log("Error sending not sendmessage chat.controller", error);
+        }
         return res.status(200).json({
           status: true,
           message: "Profile view recorded successfully",

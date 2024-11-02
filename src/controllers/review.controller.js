@@ -14,6 +14,8 @@ import UserProfileFullResource from "../resources/userprofilefullresource.js";
 import { ReviewTypes } from "../models/review/reviewtypes.js";
 import ReviewResource from "../resources/reviewresource.js";
 import { SettlementOfferTypes } from "../models/review/settlementoffertypes.js";
+import { addNotification } from "./notification.controller.js";
+import { NotificationType } from "../models/notifications/notificationtypes.js";
 
 export const LoadReviews = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
@@ -111,6 +113,20 @@ export const DisputeReview = async (req, res) => {
         review.reviewStatus = ReviewTypes.Disputed;
         let saved = await review.save();
         if (saved) {
+          let otherUserId = review.userId;
+          let otherUser = await db.User.findByPk(otherUserId);
+
+          try {
+            await addNotification({
+              fromUser: user,
+              toUser: otherUser,
+              type: NotificationType.Disagreement,
+              productId: view.id, // Optional
+            });
+          } catch (error) {
+            console.log("Error sending not sendmessage chat.controller", error);
+          }
+
           let reviewRes = await ReviewResource(review);
           return res.send({
             status: true,
@@ -148,9 +164,22 @@ export const PaySettlementOffer = async (req, res) => {
         let offerSaved = await settlementOffer.save();
         let saved = await review.save();
         if (saved) {
+          let otherUserId = review.userId;
+          let otherUser = await db.User.findByPk(otherUserId);
+
+          try {
+            await addNotification({
+              fromUser: user,
+              toUser: otherUser,
+              type: NotificationType.SettlementAccepted,
+              productId: view.id, // Optional
+            });
+          } catch (error) {
+            console.log("Error sending not sendmessage chat.controller", error);
+          }
           let reviewRes = await ReviewResource(review);
           return res.send({
-            statu: true,
+            status: true,
             message: "Review resolved and settlement offer paid",
             data: reviewRes,
           });
@@ -180,6 +209,20 @@ export const SendSettlementOffer = async (req, res) => {
         settlementAmount
       );
       if (sentOffer && sentOffer.status) {
+        let otherUserId = review.customerId;
+        let otherUser = await db.User.findByPk(otherUserId);
+
+        try {
+          await addNotification({
+            fromUser: user,
+            toUser: otherUser,
+            type: NotificationType.SettlementOfferSent,
+            productId: view.id, // Optional
+          });
+        } catch (error) {
+          console.log("Error sending not sendmessage chat.controller", error);
+        }
+
         return res.send({ status: true, message: "Sent Settlement Offer" });
       } else {
         return res.send({ status: false, message: "No such review" });

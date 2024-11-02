@@ -3,5 +3,6 @@ export const NotificationType = {
   ReplyReview: "ReplyReview",
   Disagreement: "Disagreement",
   SettlementAccepted: "SettlementAccepted",
+  SettlementOfferSent: "SettlementOfferSent",
   ProfileView: "ProfileView",
 };

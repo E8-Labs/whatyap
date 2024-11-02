@@ -47,3 +47,55 @@ export const addNotification = async ({
     throw new Error("Could not add notification");
   }
 };
+
+/**
+ * Get all notifications for the authenticated user
+ */
+export const getUserNotifications = async (req, res) => {
+  // Verify JWT token
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    if (error) {
+      return res.status(403).json({ status: false, message: "Invalid token" });
+    }
+
+    try {
+      // Extract user ID from authenticated data
+      const userId = authData.user.id;
+
+      // Fetch notifications for the authenticated user (toUser)
+      const notifications = await db.Notification.findAll({
+        where: { toUser: userId },
+        include: [
+          {
+            model: db.User,
+            as: "FromUser",
+            attributes: ["id", "name", "username", "profile_image"], // Customize fields as needed
+          },
+        ],
+        order: [["createdAt", "DESC"]],
+      });
+
+      // Format the response data
+      const responseData = notifications.map((notification) => ({
+        id: notification.id,
+        type: notification.type,
+        fromUser: notification.FromUser,
+        productId: notification.productId,
+        createdAt: notification.createdAt,
+      }));
+
+      return res.status(200).json({
+        status: true,
+        data: responseData,
+        message: "Notifications fetched successfully",
+      });
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+      return res.status(500).json({
+        status: false,
+        message: "Error fetching notifications",
+        error: err.message,
+      });
+    }
+  });
+};

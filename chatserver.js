@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import db from "./src/models/index.js"; // Adjust the import based on your directory structure
 import JWT from "jsonwebtoken";
 import { addNotification } from "./src/controllers/notification.controller.js";
+import { NotificationType } from "./src/models/notifications/notificationtypes.js";
 
 dotenv.config();
 
@@ -70,7 +71,7 @@ io.on("connection", (socket) => {
               fromUser: user,
               toUser: otherUser,
               type: NotificationType.TypeNewMessage,
-              productId: newMessage.id, // Optional
+              productId: savedMessage.id, // Optional
             });
           } catch (error) {
             console.log("Error sending not sendmessage chat.controller", error);

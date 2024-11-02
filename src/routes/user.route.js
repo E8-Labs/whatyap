@@ -21,6 +21,8 @@ import {
   SearchHistory,
 } from "../controllers/user.controller.js";
 
+import { getUserNotifications } from "../controllers/notification.controller.js";
+
 const uploadFiles = multer().fields([
   { name: "media", maxCount: 1 },
   { name: "driver_license", maxCount: 1 },
@@ -59,5 +61,7 @@ UserRouter.post("/delete_media", verifyJwtToken, DeleteMedia);
 
 UserRouter.get("/my_profile", verifyJwtToken, GetProfileMine);
 UserRouter.get("/searchHistory", verifyJwtToken, SearchHistory);
+
+UserRouter.get("/notifications", verifyJwtToken, getUserNotifications);
 
 export default UserRouter;

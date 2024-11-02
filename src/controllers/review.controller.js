@@ -70,10 +70,11 @@ export const LoadReviews = async (req, res) => {
       }
       if (req.query.userId) {
         // if user wants to review of the other business or customer then this api would be called
-        condition = {
-          ...condition,
-          [db.Sequelize.Op.or]: [{ userId: userId }, { customerId: userId }],
-        };
+        if (user.role == "customer") {
+          condition = { ...condition, customerId: userId };
+        } else {
+          condition = { ...condition, userId: userId };
+        }
       }
 
       console.log("Condition is ", condition);

@@ -52,6 +52,7 @@ export const addNotification = async ({
  * Get all notifications for the authenticated user
  */
 export const getUserNotifications = async (req, res) => {
+  console.log("Get Notifications api");
   // Verify JWT token
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (error) {

@@ -144,12 +144,16 @@ export const RegisterUser = async (req, res) => {
 
     //   thumbnail_image = await createThumbnailAndUpload(mediaBuffer, mediaFilename, "profile_images")
   }
+  let user = null;
 
-  let user = await db.User.findOne({
-    where: {
-      driver_license_id: driver_license_id,
-    },
-  });
+  if (driver_license_id != "") {
+    user = await db.User.findOne({
+      where: {
+        driver_license_id: driver_license_id,
+      },
+    });
+  }
+
   if (user) {
     user.email = email;
     user.name = name;

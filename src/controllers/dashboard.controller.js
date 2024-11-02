@@ -184,8 +184,106 @@ export const AddProfileView = async (req, res) => {
   });
 };
 
+// export const SearchUsers = async (req, res) => {
+//   const { searchQuery, searchType, offset = 0 } = req.query;
+
+//   // Verify JWT Token
+//   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+//     if (error) {
+//       return res.status(403).json({ status: false, message: "Invalid Token" });
+//     }
+
+//     if (authData) {
+//       const userId = authData.user.id;
+
+//       if (!searchQuery || !searchType) {
+//         return res.status(400).json({
+//           status: false,
+//           message: "Missing search query or search type",
+//         });
+//       }
+
+//       let whereClause = {};
+
+//       // Search based on the search type
+//       if (searchType === "name") {
+//         whereClause = {
+//           name: {
+//             [db.Sequelize.Op.like]: `%${searchQuery}%`,
+//           },
+//         };
+//       } else if (searchType === "driver_license") {
+//         whereClause = {
+//           driver_license_id: searchQuery,
+//         };
+//       } else {
+//         return res
+//           .status(400)
+//           .json({ status: false, message: "Invalid search type" });
+//       }
+
+//       let role = req.query.role || null;
+//       if (role) {
+//         whereClause = { ...whereClause, role: role };
+//       }
+
+//       try {
+//         // Log the search in SearchHistory
+//         await db.SearchHistory.create({
+//           userId: userId,
+//           searchQuery: searchQuery,
+//           searchType: searchType,
+//         });
+
+//         // Fetch the search results
+//         const users = await db.User.findAll({
+//           where: whereClause,
+//           limit: 10,
+//           offset: parseInt(offset, 10),
+//         });
+
+//         // Prepare the response data
+//         const responseData = users.map((user) => ({
+//           id: user.id,
+//           name: user.name,
+//           username: user.username,
+//           profile_image: user.profile_image,
+//           driver_license_id: user.driver_license_id,
+//           full_profile_image: user.full_profile_image,
+//           city: user.city,
+//           state: user.state,
+//           phone: user.phone,
+//           email: user.email,
+//           role: user.role,
+//         }));
+//         let resource = await UserProfileLiteResource(responseData);
+
+//         return res
+//           .status(200)
+//           .json({ status: true, data: resource, message: "Search results" });
+//       } catch (err) {
+//         return res.status(500).json({
+//           status: false,
+//           message: "Error fetching search results",
+//           error: err.message,
+//         });
+//       }
+//     }
+//   });
+// };
+
+//When Business adds a customer
+
 export const SearchUsers = async (req, res) => {
-  const { searchQuery, searchType, offset = 0 } = req.query;
+  const {
+    searchQuery,
+    searchType,
+    offset = 0,
+    city,
+    state,
+    minScore,
+    maxScore,
+  } = req.query;
 
   // Verify JWT Token
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
@@ -197,10 +295,11 @@ export const SearchUsers = async (req, res) => {
       const userId = authData.user.id;
 
       if (!searchQuery || !searchType) {
-        return res.status(400).json({
-          status: false,
-          message: "Missing search query or search type",
-        });
+        searchQuery = "name";
+        // return res.status(400).json({
+        //   status: false,
+        //   message: "Missing search query or search type",
+        // });
       }
 
       let whereClause = {};
@@ -222,9 +321,18 @@ export const SearchUsers = async (req, res) => {
           .json({ status: false, message: "Invalid search type" });
       }
 
+      // Filter by role if provided
       let role = req.query.role || null;
       if (role) {
         whereClause = { ...whereClause, role: role };
+      }
+
+      // Filter by city and state if provided
+      if (city) {
+        whereClause = { ...whereClause, city: city };
+      }
+      if (state) {
+        whereClause = { ...whereClause, state: state };
       }
 
       try {
@@ -235,14 +343,31 @@ export const SearchUsers = async (req, res) => {
           searchType: searchType,
         });
 
-        // Fetch the search results
+        // Fetch the search results, including filter for review score range if provided
         const users = await db.User.findAll({
           where: whereClause,
           limit: 10,
           offset: parseInt(offset, 10),
+          include: [
+            {
+              model: db.Review,
+              required: false,
+              where:
+                minScore && maxScore
+                  ? {
+                      yapScore: {
+                        [db.Sequelize.Op.between]: [
+                          parseFloat(minScore),
+                          parseFloat(maxScore),
+                        ],
+                      },
+                    }
+                  : null,
+            },
+          ],
         });
 
-        // Prepare the response data
+        // Prepare the response data, including only users that match filters or have no reviews
         const responseData = users.map((user) => ({
           id: user.id,
           name: user.name,
@@ -272,7 +397,6 @@ export const SearchUsers = async (req, res) => {
   });
 };
 
-//When Business adds a customer
 export const AddCustomer = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {

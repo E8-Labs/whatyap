@@ -102,6 +102,9 @@ const User = (sequelize, Sequelize) => {
     },
   });
 
+  User.associate = function (models) {
+    User.hasMany(models.Review, { foreignKey: "userId" });
+  };
   return User;
 };
 

@@ -58,6 +58,9 @@ const Review = (sequelize, Sequelize) => {
       foreignKey: "customerId",
     });
   };
+  Review.associate = function (models) {
+    Review.belongsTo(models.User, { foreignKey: "userId" });
+  };
 
   return Review;
 };

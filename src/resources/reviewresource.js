@@ -62,6 +62,8 @@ async function getUserData(review, currentUser = null) {
     updatedAt: review.updatedAt,
     settlementOfferObject: settlementOffer,
     reviewStatus: review.reviewStatus,
+    newActivityByCustomer: review.newActivityByCustomer,
+    newActivityByBusiness: review.newActivityByBusiness,
   };
 
   return UserFullResource;

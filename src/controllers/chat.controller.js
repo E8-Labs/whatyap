@@ -108,10 +108,18 @@ export const sendMessage = async (req, res) => {
         chat.lastMessage = message;
         await chat.save();
 
-        let otherUserId = chat.customerId;
+        let otherUserId = chat.customerId; //pther user is customer
         if (otherUserId == user.id) {
           otherUserId = chat.businessId;
+          //current user is customer
+          review.newActivityByCustomer = true;
+          let saved = await review.save();
+        } else {
+          //current user is business
+          review.newActivityByBusiness = true;
+          let saved = await review.save();
         }
+
         let otherUser = await db.User.findByPk(otherUserId);
         try {
           await addNotification({

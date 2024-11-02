@@ -48,6 +48,14 @@ const Review = (sequelize, Sequelize) => {
       type: Sequelize.STRING, //""
       defaultValue: "active", // default is active, disputed, resolved, past, resolvedByAdmin
     },
+    newActivityByCustomer: {
+      type: Sequelize.BOOLEAN, //""
+      defaultValue: false,
+    },
+    newActivityByBusiness: {
+      type: Sequelize.BOOLEAN, //""
+      defaultValue: false,
+    },
   });
 
   // Define associations if needed

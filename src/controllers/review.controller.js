@@ -113,8 +113,18 @@ export const DisputeReview = async (req, res) => {
         review.reviewStatus = ReviewTypes.Disputed;
         let saved = await review.save();
         if (saved) {
-          let otherUserId = review.userId;
+          let otherUserId = review.userId; //business
           let otherUser = await db.User.findByPk(otherUserId);
+
+          if (otherUserId == user.id) {
+            //current user is business
+            review.newActivityByBusiness = true;
+            let saved = await review.save();
+          } else {
+            //current user is customer
+            review.newActivityByCustomer = true;
+            let saved = await review.save();
+          }
 
           try {
             await addNotification({
@@ -128,6 +138,7 @@ export const DisputeReview = async (req, res) => {
           }
 
           let reviewRes = await ReviewResource(review);
+
           return res.send({
             status: true,
             message: "Review dispute sent",
@@ -211,13 +222,21 @@ export const SendSettlementOffer = async (req, res) => {
       if (sentOffer && sentOffer.status) {
         let otherUserId = review.customerId;
         let otherUser = await db.User.findByPk(otherUserId);
-
+        if (otherUserId == user.id) {
+          //current user is customer
+          review.newActivityByCustomer = true;
+          let saved = await review.save();
+        } else {
+          //current user is Business
+          review.newActivityByBusiness = true;
+          let saved = await review.save();
+        }
         try {
           await addNotification({
             fromUser: user,
             toUser: otherUser,
             type: NotificationType.SettlementOfferSent,
-            productId: view.id, // Optional
+            productId: review.id, // Optional
           });
         } catch (error) {
           console.log("Error sending not sendmessage chat.controller", error);

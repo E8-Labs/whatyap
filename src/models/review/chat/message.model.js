@@ -12,6 +12,10 @@ const Message = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       defaultValue: "Text",
     },
+    emoji: {
+      type: Sequelize.STRING,
+      allowNull: true,
+    },
     settlementOfferId: {
       type: Sequelize.INTEGER,
       allowNull: true,

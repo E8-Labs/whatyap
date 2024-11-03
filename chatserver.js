@@ -88,7 +88,7 @@ io.on("connection", (socket) => {
 
         // Handle media file upload
         if (file) {
-          const mediaBuffer = Buffer.from(file.buffer); // Assuming `file.buffer` is provided
+          const mediaBuffer = file.buffer; // Assuming `file.buffer` is provided
           const mediaExt = path.extname(file.originalname);
           const mediaFilename = `${Date.now()}${mediaExt}`;
 

@@ -39,6 +39,8 @@ io.on("connection", (socket) => {
       if (message) {
         message.emoji = emoji;
         let saved = message.save();
+        console.log("Emitting data to ", message.chatId);
+        console.log("Emitting message", message);
         io.to(message.chatId).emit("receiveMessage", {
           status: true,
           message: JSON.stringify(message),

@@ -17,6 +17,10 @@ const Chat = (sequelize, Sequelize) => {
       type: Sequelize.STRING, //""
       defaultValue: "",
     },
+    emoji: {
+      type: Sequelize.STRING, //""
+      allowNull: true,
+    },
   });
 
   // Define associations if needed

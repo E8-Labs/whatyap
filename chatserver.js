@@ -17,6 +17,41 @@ const io = new Server(server);
 io.on("connection", (socket) => {
   console.log("A user connected: ", socket.id);
 
+  //React on message
+  socket.on("reactOnMessage", async (data) => {
+    console.log("Emoji received ", data, "Type:", typeof data);
+    let token = message.token;
+    JWT.verify(token, process.env.SecretJwtKey, async (err, authData) => {
+      if (err) {
+        console.log("Invalid token", err);
+        return socket.emit("receiveMessage", {
+          status: false,
+          message: "Unauthorized: Invalid token",
+        });
+      }
+
+      const userid = authData.user.id;
+      let user = await db.User.findByPk(userid);
+      console.log("User is ", userid);
+      let emoji = data.emoji;
+      let messageId = data.messageId;
+      let message = await db.Message.findByPk(messageId);
+      if (message) {
+        message.emoji = emoji;
+        let saved = message.save();
+        return socket.emit("receiveMessage", {
+          status: true,
+          message: JSON.stringify(message),
+        });
+      } else {
+        return socket.emit("receiveMessage", {
+          status: false,
+          message: "No such message",
+        });
+      }
+    });
+  });
+
   socket.on("sendMessage", async (message) => {
     console.log("Message received ", message, "Type:", typeof message);
 

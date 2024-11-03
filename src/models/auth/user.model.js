@@ -117,7 +117,7 @@ const User = (sequelize, Sequelize) => {
 
   User.prototype.getTotalReviews = async function () {
     console.log("Reviews loading ", this.id);
-    let reviews = await sequelize.models.Review.count("customerId", {
+    let reviews = await sequelize.models.Review.count({
       where: { customerId: this.id },
     });
 

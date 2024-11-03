@@ -7,6 +7,7 @@ import db from "./src/models/index.js"; // Adjust the import based on your direc
 import JWT from "jsonwebtoken";
 import { addNotification } from "./src/controllers/notification.controller.js";
 import { NotificationType } from "./src/models/notifications/notificationtypes.js";
+import MessageResource from "./src/resources/messageresource.js";
 
 dotenv.config();
 
@@ -41,9 +42,10 @@ io.on("connection", (socket) => {
         let saved = message.save();
         console.log("Emitting data to ", message.chatId);
         console.log("Emitting message", message);
+        let res = await MessageResource(message);
         socket.emit("receiveMessage" + message.chatId, {
           status: true,
-          message: message,
+          message: res,
         });
       } else {
         socket.emit("receiveMessage" + message.chatId, {
@@ -108,9 +110,10 @@ io.on("connection", (socket) => {
           });
 
           // Broadcast the message to both users in the chat
+          let res = await MessageResource(savedMessage);
           socket.emit("receiveMessage" + chatId, {
             status: true,
-            message: savedMessage,
+            message: res,
           });
 
           console.log("Saved message to database:", savedMessage);

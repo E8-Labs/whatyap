@@ -109,10 +109,19 @@ const User = (sequelize, Sequelize) => {
   // Method to calculate total yapScore for a user
   User.prototype.getTotalYapScore = async function () {
     const totalYapScore = await sequelize.models.Review.sum("yapScore", {
-      where: { userId: this.id },
+      where: { customerId: this.id },
     });
     return totalYapScore || 0; // Return 0 if no reviews are found
   };
+
+  User.prototype.getTotalReviews = async function () {
+    let reviews = await sequelize.models.Review.count("id", {
+      where: { customerId: this.id },
+    });
+
+    return reviews || 0;
+  };
+
   return User;
 };
 

@@ -29,6 +29,7 @@ async function getUserData(user, currentUser = null) {
   });
 
   const totalYapScore = await user.getTotalYapScore();
+  let reviews = await user.getTotalReviews();
   const UserFullResource = {
     id: user.id,
     name: user.name,
@@ -54,6 +55,7 @@ async function getUserData(user, currentUser = null) {
     addedBy: user.addedBy,
     media: media,
     totalYapScore: totalYapScore,
+    totalReviews: reviews,
   };
 
   return UserFullResource;

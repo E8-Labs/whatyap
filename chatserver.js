@@ -1,5 +1,7 @@
 import express from "express";
 import { Server } from "socket.io";
+import path from "path";
+import fs from "fs";
 // import { OpenAI } from "openai"; // Adjust import based on your OpenAI SDK version
 import http from "http"; // Importing http module
 import dotenv from "dotenv";

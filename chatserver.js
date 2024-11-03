@@ -24,7 +24,7 @@ io.on("connection", (socket) => {
     JWT.verify(token, process.env.SecretJwtKey, async (err, authData) => {
       if (err) {
         console.log("Invalid token", err);
-        return socket.emit("receiveMessage", {
+        return socket.emit("receiveMessage" + message.chatId, {
           status: false,
           message: "Unauthorized: Invalid token",
         });
@@ -41,12 +41,12 @@ io.on("connection", (socket) => {
         let saved = message.save();
         console.log("Emitting data to ", message.chatId);
         console.log("Emitting message", message);
-        io.to(message.chatId).emit("receiveMessage", {
+        socket.emit("receiveMessage" + message.chatId, {
           status: true,
           message: JSON.stringify(message),
         });
       } else {
-        socket.emit("receiveMessage", {
+        socket.emit("receiveMessage" + message.chatId, {
           status: false,
           message: "No such message",
         });
@@ -58,11 +58,12 @@ io.on("connection", (socket) => {
     console.log("Message received ", message, "Type:", typeof message);
 
     // Verify JWT Token
+    const { chatId, messageContent, file } = message;
     let token = message.token;
     JWT.verify(token, process.env.SecretJwtKey, async (err, authData) => {
       if (err) {
         console.log("Invalid token", err);
-        return socket.emit("receiveMessage", {
+        return socket.emit("receiveMessage" + chatId, {
           status: false,
           message: "Unauthorized: Invalid token",
         });
@@ -72,7 +73,6 @@ io.on("connection", (socket) => {
       let user = await db.User.findByPk(userid);
       console.log("User is ", userid);
       try {
-        const { chatId, messageContent, file } = message;
         let mediaUrl = null;
         let messageType = "Text";
 
@@ -108,7 +108,7 @@ io.on("connection", (socket) => {
           });
 
           // Broadcast the message to both users in the chat
-          io.to(chatId).emit("receiveMessage", {
+          socket.emit("receiveMessage" + chatId, {
             status: true,
             message: JSON.stringify(savedMessage),
           });
@@ -147,14 +147,14 @@ io.on("connection", (socket) => {
           await chat.update({ lastMessage: messageContent });
         } else {
           console.log("Chat not found or user not authorized", chatId);
-          socket.emit("receiveMessage", {
+          socket.emit("receiveMessage" + chatId, {
             status: false,
             message: "Chat not found or unauthorized",
           });
         }
       } catch (error) {
         console.log("Error :", error);
-        socket.emit("receiveMessage", {
+        socket.emit("receiveMessage" + chatId, {
           status: false,
           message: error.message,
         });

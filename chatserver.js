@@ -20,7 +20,7 @@ io.on("connection", (socket) => {
   //React on message
   socket.on("reactOnMessage", async (data) => {
     console.log("Emoji received ", data, "Type:", typeof data);
-    let token = message.token;
+    let token = data.token;
     JWT.verify(token, process.env.SecretJwtKey, async (err, authData) => {
       if (err) {
         console.log("Invalid token", err);

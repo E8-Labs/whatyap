@@ -39,12 +39,12 @@ io.on("connection", (socket) => {
       if (message) {
         message.emoji = emoji;
         let saved = message.save();
-        return socket.emit("receiveMessage", {
+        io.to(message.chatId).emit("receiveMessage", {
           status: true,
           message: JSON.stringify(message),
         });
       } else {
-        return socket.emit("receiveMessage", {
+        socket.emit("receiveMessage", {
           status: false,
           message: "No such message",
         });
@@ -70,8 +70,24 @@ io.on("connection", (socket) => {
       let user = await db.User.findByPk(userid);
       console.log("User is ", userid);
       try {
-        const { chatId, messageContent } = message;
+        const { chatId, messageContent, file } = message;
+        let mediaUrl = null;
+        let messageType = "Text";
 
+        if (file) {
+          const mediaBuffer = Buffer.from(file.buffer); // Assuming `file.buffer` is provided
+          const mediaExt = path.extname(file.originalname);
+          const mediaFilename = `${Date.now()}${mediaExt}`;
+
+          mediaUrl = await uploadMedia(
+            `media_${mediaFilename}`,
+            mediaBuffer,
+            file.mimetype,
+            "chat_media"
+          );
+
+          messageType = "Media";
+        }
         // Retrieve the chat
         const chat = await db.Chat.findByPk(chatId);
         let review = await db.Review.findByPk(chat.reviewId);
@@ -82,10 +98,11 @@ io.on("connection", (socket) => {
         ) {
           // Save the message to the database
           const savedMessage = await db.Message.create({
-            message: messageContent,
+            message: messageContent || "",
+            media: mediaUrl,
             chatId,
             userId: userid,
-            messageType: "Text", // or any other type as per your use case
+            messageType: messageType, // or any other type as per your use case
           });
 
           // Broadcast the message to both users in the chat

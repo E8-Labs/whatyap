@@ -20,7 +20,7 @@ import { NotificationType } from "../models/notifications/notificationtypes.js";
 export const LoadReviews = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {
-      console.log("Loading reviews for ", authData.user.id);
+      console.log("Auth User Id ", authData.user.id);
       let user = await db.User.findByPk(authData.user.id);
       if (!user) {
         return res.send({ status: false, message: "No such user" });
@@ -30,8 +30,11 @@ export const LoadReviews = async (req, res) => {
 
       let userId = user.id;
       if (req.query.userId) {
+        console.log("UserId found ", userId);
         userId = req.query.userId;
+        user = await db.User.findByPk(userId);
       }
+      console.log("Loading reviews for ", authData.user.id);
       let condition = {
         reviewStatus: reviewStatus,
       };

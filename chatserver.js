@@ -11,6 +11,11 @@ import { addNotification } from "./src/controllers/notification.controller.js";
 import { NotificationType } from "./src/models/notifications/notificationtypes.js";
 import MessageResource from "./src/resources/messageresource.js";
 
+import {
+  uploadMedia,
+  createThumbnailAndUpload,
+} from "./src/utils/generateThumbnail.js";
+
 dotenv.config();
 
 const app = express();

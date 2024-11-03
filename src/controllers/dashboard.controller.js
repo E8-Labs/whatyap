@@ -34,11 +34,26 @@ export const GetBusinessDashboardData = async (req, res) => {
       }
 
       // Fetch the recently viewed profiles
+      // let recentlyViewed = await db.ProfileView.findAll({
+      //   where: { userId: user.id },
+      //   include: [{ model: db.User, as: "ViewedUser" }],
+      //   limit: 10,
+      //   order: [["viewedAt", "DESC"]],
+      // });
+
       let recentlyViewed = await db.ProfileView.findAll({
         where: { userId: user.id },
         include: [{ model: db.User, as: "ViewedUser" }],
-        limit: 10,
+        attributes: [
+          [
+            db.sequelize.fn("DISTINCT", db.sequelize.col("viewedUserId")),
+            "viewedUserId",
+          ],
+          "id",
+          "viewedAt",
+        ],
         order: [["viewedAt", "DESC"]],
+        limit: 20,
       });
 
       // Convert recently viewed profiles to the required format

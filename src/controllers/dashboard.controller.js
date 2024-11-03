@@ -44,7 +44,7 @@ export const GetBusinessDashboardData = async (req, res) => {
       let recentlyViewed = await db.ProfileView.findAll({
         where: {
           userId: user.id,
-          viewedAt: sequelize.literal(`viewedAt = (
+          viewedAt: db.sequelize.literal(`viewedAt = (
             SELECT MAX(viewedAt)
             FROM ProfileViews AS pv
             WHERE pv.userId = ProfileView.userId 

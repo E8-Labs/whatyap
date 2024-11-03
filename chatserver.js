@@ -88,7 +88,7 @@ io.on("connection", (socket) => {
 
         // Handle media file upload
         if (file) {
-          const mediaBuffer = file.buffer; // Assuming `file.buffer` is provided
+          const mediaBuffer = Buffer.from(file.buffer, "base64"); // Assuming `file.buffer` is provided
           const mediaExt = path.extname(file.originalname);
           const mediaFilename = `${Date.now()}${mediaExt}`;
 
@@ -104,7 +104,7 @@ io.on("connection", (socket) => {
 
         // Handle audio file upload
         if (audio) {
-          const audioBuffer = Buffer.from(audio.buffer); // Assuming `audio.buffer` is provided
+          const audioBuffer = Buffer.from(audio.buffer, "base64"); // Assuming `audio.buffer` is provided
           const audioExt = path.extname(audio.originalname);
           const audioFilename = `${Date.now()}${audioExt}`;
 

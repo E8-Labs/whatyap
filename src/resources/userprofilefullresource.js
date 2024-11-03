@@ -27,6 +27,8 @@ async function getUserData(user, currentUser = null) {
       userId: user.id,
     },
   });
+
+  const totalYapScore = await user.getTotalYapScore();
   const UserFullResource = {
     id: user.id,
     name: user.name,
@@ -51,64 +53,65 @@ async function getUserData(user, currentUser = null) {
     lon: user.lon,
     addedBy: user.addedBy,
     media: media,
+    totalYapScore: totalYapScore,
   };
 
   return UserFullResource;
 }
 
-const calculateTotalEarned = async (modelId) => {
-  try {
-    let amountToChargePerMin = 10; // Dollars
-    let ai = await db.UserAi.findOne({
-      where: {
-        userId: modelId,
-      },
-    });
-    if (ai) {
-      //console.log("An AI Found for user ", ai);
-      amountToChargePerMin = ai.price;
-    } else {
-      amountToChargePerMin = 10; // by default 10
-    }
-    // Find all calls to the given creator (modelId)
-    const calls = await db.CallModel.findAll({
-      where: {
-        modelId: modelId,
-      },
-      attributes: [
-        "userId",
-        [db.Sequelize.fn("SUM", db.Sequelize.col("duration")), "totalDuration"],
-      ],
-      group: ["userId"],
-    });
+// const calculateTotalEarned = async (modelId) => {
+//   try {
+//     let amountToChargePerMin = 10; // Dollars
+//     let ai = await db.UserAi.findOne({
+//       where: {
+//         userId: modelId,
+//       },
+//     });
+//     if (ai) {
+//       //console.log("An AI Found for user ", ai);
+//       amountToChargePerMin = ai.price;
+//     } else {
+//       amountToChargePerMin = 10; // by default 10
+//     }
+//     // Find all calls to the given creator (modelId)
+//     const calls = await db.CallModel.findAll({
+//       where: {
+//         modelId: modelId,
+//       },
+//       attributes: [
+//         "userId",
+//         [db.Sequelize.fn("SUM", db.Sequelize.col("duration")), "totalDuration"],
+//       ],
+//       group: ["userId"],
+//     });
 
-    let totalEarned = 0;
+//     let totalEarned = 0;
 
-    calls.forEach((call) => {
-      const totalDurationInSeconds = parseInt(
-        call.getDataValue("totalDuration"),
-        10
-      );
-      const totalDurationInMinutes = totalDurationInSeconds / 60;
-      console.log(
-        `Duration for ${totalDurationInSeconds} sec in min ${totalDurationInMinutes}`
-      );
+//     calls.forEach((call) => {
+//       const totalDurationInSeconds = parseInt(
+//         call.getDataValue("totalDuration"),
+//         10
+//       );
+//       const totalDurationInMinutes = totalDurationInSeconds / 60;
+//       console.log(
+//         `Duration for ${totalDurationInSeconds} sec in min ${totalDurationInMinutes}`
+//       );
 
-      // Subtract 5 minutes free per user
-      const billableMinutes =
-        totalDurationInMinutes > 5 ? totalDurationInMinutes - 5 : 0;
+//       // Subtract 5 minutes free per user
+//       const billableMinutes =
+//         totalDurationInMinutes > 5 ? totalDurationInMinutes - 5 : 0;
 
-      // Charge $1 per minute for billable minutes
-      const earnedForUser = billableMinutes * amountToChargePerMin; // $1 per minute
-      console.log(`TotalEarned ${call.userId}`, earnedForUser);
-      totalEarned += earnedForUser;
-    });
+//       // Charge $1 per minute for billable minutes
+//       const earnedForUser = billableMinutes * amountToChargePerMin; // $1 per minute
+//       console.log(`TotalEarned ${call.userId}`, earnedForUser);
+//       totalEarned += earnedForUser;
+//     });
 
-    return totalEarned;
-  } catch (error) {
-    console.error("Error calculating total earned: ", error);
-    return 0;
-  }
-};
+//     return totalEarned;
+//   } catch (error) {
+//     console.error("Error calculating total earned: ", error);
+//     return 0;
+//   }
+// };
 
 export default UserProfileFullResource;

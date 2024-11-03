@@ -105,6 +105,14 @@ const User = (sequelize, Sequelize) => {
   User.associate = function (models) {
     User.hasMany(models.Review, { foreignKey: "userId" });
   };
+
+  // Method to calculate total yapScore for a user
+  User.prototype.getTotalYapScore = async function () {
+    const totalYapScore = await sequelize.models.Review.sum("yapScore", {
+      where: { userId: this.id },
+    });
+    return totalYapScore || 0; // Return 0 if no reviews are found
+  };
   return User;
 };
 

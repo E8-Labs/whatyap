@@ -42,18 +42,18 @@ export const GetBusinessDashboardData = async (req, res) => {
       // });
 
       let recentlyViewed = await db.ProfileView.findAll({
-        where: { userId: user.id },
+        where: {
+          userId: user.id,
+          viewedAt: sequelize.literal(`viewedAt = (
+            SELECT MAX(viewedAt)
+            FROM ProfileViews AS pv
+            WHERE pv.userId = ProfileView.userId 
+            AND pv.viewedUserId = ProfileView.viewedUserId
+          )`),
+        },
         include: [{ model: db.User, as: "ViewedUser" }],
-        attributes: [
-          [
-            db.sequelize.fn("DISTINCT", db.sequelize.col("viewedUserId")),
-            "viewedUserId",
-          ],
-          "id",
-          "viewedAt",
-        ],
         order: [["viewedAt", "DESC"]],
-        limit: 20,
+        limit: 10,
       });
 
       // Convert recently viewed profiles to the required format

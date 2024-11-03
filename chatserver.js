@@ -43,7 +43,7 @@ io.on("connection", (socket) => {
         console.log("Emitting message", message);
         socket.emit("receiveMessage" + message.chatId, {
           status: true,
-          message: JSON.stringify(message),
+          message: message,
         });
       } else {
         socket.emit("receiveMessage" + message.chatId, {
@@ -110,7 +110,7 @@ io.on("connection", (socket) => {
           // Broadcast the message to both users in the chat
           socket.emit("receiveMessage" + chatId, {
             status: true,
-            message: JSON.stringify(savedMessage),
+            message: savedMessage,
           });
 
           console.log("Saved message to database:", savedMessage);

@@ -8,6 +8,10 @@ const Message = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       allowNull: true,
     },
+    voice: {
+      type: Sequelize.STRING,
+      allowNull: true,
+    },
     messageType: {
       type: Sequelize.STRING,
       defaultValue: "Text",

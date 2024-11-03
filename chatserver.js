@@ -60,7 +60,7 @@ io.on("connection", (socket) => {
     console.log("Message received ", message, "Type:", typeof message);
 
     // Verify JWT Token
-    const { chatId, messageContent, file } = message;
+    const { chatId, messageContent, file, audio } = message; // Added `audio`
     let token = message.token;
     JWT.verify(token, process.env.SecretJwtKey, async (err, authData) => {
       if (err) {
@@ -76,8 +76,10 @@ io.on("connection", (socket) => {
       console.log("User is ", userid);
       try {
         let mediaUrl = null;
+        let voiceUrl = null;
         let messageType = "Text";
 
+        // Handle media file upload
         if (file) {
           const mediaBuffer = Buffer.from(file.buffer); // Assuming `file.buffer` is provided
           const mediaExt = path.extname(file.originalname);
@@ -89,12 +91,30 @@ io.on("connection", (socket) => {
             file.mimetype,
             "chat_media"
           );
-
+          console.log("Meida", mediaUrl);
           messageType = "Media";
         }
+
+        // Handle audio file upload
+        if (audio) {
+          const audioBuffer = Buffer.from(audio.buffer); // Assuming `audio.buffer` is provided
+          const audioExt = path.extname(audio.originalname);
+          const audioFilename = `${Date.now()}${audioExt}`;
+
+          voiceUrl = await uploadMedia(
+            `audio_${audioFilename}`,
+            audioBuffer,
+            audio.mimetype,
+            "chat_audio"
+          );
+          console.log("Voice ", voiceUrl);
+          messageType = "Voice";
+        }
+
         // Retrieve the chat
         const chat = await db.Chat.findByPk(chatId);
         let review = await db.Review.findByPk(chat.reviewId);
+
         // Ensure the user is either the business or the customer in the chat
         if (
           chat &&
@@ -104,9 +124,10 @@ io.on("connection", (socket) => {
           const savedMessage = await db.Message.create({
             message: messageContent || "",
             media: mediaUrl,
+            voice: voiceUrl,
             chatId,
             userId: userid,
-            messageType: messageType, // or any other type as per your use case
+            messageType: messageType,
           });
 
           // Broadcast the message to both users in the chat
@@ -121,16 +142,17 @@ io.on("connection", (socket) => {
           let otherUserId = chat.customerId;
           if (otherUserId == user.id) {
             otherUserId = chat.businessId;
-            //current user is customer
+            // current user is customer
             review.newActivityByCustomer = true;
             review.newActivityByBusiness = false;
-            let saved = await review.save();
+            await review.save();
           } else {
-            //current user is business
+            // current user is business
             review.newActivityByBusiness = true;
             review.newActivityByCustomer = false;
-            let saved = await review.save();
+            await review.save();
           }
+
           if (otherUserId == user.id) {
             otherUserId = chat.businessId;
           }
@@ -143,11 +165,11 @@ io.on("connection", (socket) => {
               productId: savedMessage.id, // Optional
             });
           } catch (error) {
-            console.log("Error sending not sendmessage chat.controller", error);
+            console.log("Error sending notification", error);
           }
 
           // Optionally update the lastMessage field in Chat model
-          await chat.update({ lastMessage: messageContent });
+          await chat.update({ lastMessage: messageContent || "" });
         } else {
           console.log("Chat not found or user not authorized", chatId);
           socket.emit("receiveMessage" + chatId, {

@@ -68,6 +68,8 @@ io.on("connection", (socket) => {
 
     // Verify JWT Token
     const { chatId, messageContent, file, audio } = message; // Added `audio`
+    let dataFromSocket = { chatId, messageContent, file, audio };
+    console.log("DataFromSocket", dataFromSocket);
     let token = message.token;
     JWT.verify(token, process.env.SecretJwtKey, async (err, authData) => {
       if (err) {
@@ -104,6 +106,7 @@ io.on("connection", (socket) => {
 
         // Handle audio file upload
         if (audio) {
+          console.log("Audio file there.");
           const audioBuffer = Buffer.from(audio.buffer, "base64"); // Assuming `audio.buffer` is provided
           const audioExt = path.extname(audio.originalname);
           const audioFilename = `${Date.now()}${audioExt}`;
@@ -115,6 +118,7 @@ io.on("connection", (socket) => {
             "chat_audio"
           );
           console.log("Voice ", voiceUrl);
+
           messageType = "Voice";
         }
 

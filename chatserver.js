@@ -107,7 +107,7 @@ io.on("connection", (socket) => {
         // Handle audio file upload
         if (audio) {
           console.log("Audio file there.");
-          const audioBuffer = Buffer.from(audio.buffer, "base64"); // Assuming `audio.buffer` is provided
+          const audioBuffer = Buffer.from(audio.buffer); // Assuming `audio.buffer` is provided
           const audioExt = path.extname(audio.originalname);
           const audioFilename = `${Date.now()}${audioExt}`;
 

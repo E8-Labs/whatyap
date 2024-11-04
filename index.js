@@ -6,6 +6,7 @@ import path from "path";
 
 import db from "./src/models/index.js";
 
+import AdminRouter from "./src/routes/admin.route.js";
 import UserRouter from "./src/routes/user.route.js";
 import BusinessRouter from "./src/routes/dashboard.route.js";
 import ReviewRouter from "./src/routes/review.route.js";
@@ -78,6 +79,7 @@ db.sequelize.sync({ alter: true });
 app.use("/api/user", UserRouter);
 app.use("/api/dashboard", BusinessRouter);
 app.use("/api/review", ReviewRouter);
+app.use("/api/admin", AdminRouter);
 
 const server = app.listen(process.env.Port, () => {
   console.log("Started listening on " + process.env.Port);

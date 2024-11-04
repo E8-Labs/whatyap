@@ -20,8 +20,8 @@ const User = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
     },
     role: {
-      type: Sequelize.STRING, //"caller", "creator"
-      defaultValue: "caller",
+      type: Sequelize.STRING, //"customer", "business", "admin"
+      defaultValue: "customer",
     },
 
     profile_image: {

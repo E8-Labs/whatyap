@@ -1,7 +1,7 @@
 import db from "../models/index.js";
 
 export const getTotalYapScore = async function (user) {
-  console.log("Yap loading ", this.id);
+  console.log("Yap loading ", user.id);
   const totalYapScore = await db.Review.sum("yapScore", {
     where: { customerId: user.id },
   });
@@ -9,7 +9,7 @@ export const getTotalYapScore = async function (user) {
 };
 
 export const getTotalReviews = async function (user) {
-  console.log("Reviews loading ", this.id);
+  console.log("Reviews loading ", user.id);
   let reviews = await db.Review.count({
     where: { customerId: user.id },
   });

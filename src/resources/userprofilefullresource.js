@@ -1,4 +1,5 @@
 import db from "../models/index.js";
+import { getTotalYapScore, getTotalReviews } from "../utils/user.utility.js";
 // import AssistantLiteResource from "./assistantliteresource.js";
 // import UserSubscriptionResource from "./usersubscription.resource.js";
 
@@ -32,8 +33,8 @@ async function getUserData(user, currentUser = null) {
   let totalYapScore = 0;
   let reviews = 0;
   if (user instanceof db.User) {
-    totalYapScore = await user.getTotalYapScore();
-    reviews = await user.getTotalReviews();
+    totalYapScore = await getTotalYapScore(user);
+    reviews = await getTotalReviews(user);
   }
 
   const UserFullResource = {

@@ -28,8 +28,14 @@ async function getUserData(user, currentUser = null) {
     },
   });
 
-  const totalYapScore = await user.getTotalYapScore();
-  let reviews = await user.getTotalReviews();
+  console.log("Type of user is ", typeof user);
+  let totalYapScore = 0;
+  let reviews = 0;
+  if (user instanceof db.User) {
+    totalYapScore = await user.getTotalYapScore();
+    reviews = await user.getTotalReviews();
+  }
+
   const UserFullResource = {
     id: user.id,
     name: user.name,

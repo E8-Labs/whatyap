@@ -432,6 +432,34 @@ export const SearchUsers = async (req, res) => {
   });
 };
 
+export const DeleteSearch = async (req, res) => {
+  const { searchId } = req.body; // Expecting viewedUserId in the request body
+
+  // Verify JWT Token
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    if (error) {
+      return res.status(403).json({ status: false, message: "Invalid Token" });
+    }
+
+    if (authData) {
+      const userId = authData.user.id;
+      let user = await db.User.findByPk(userId);
+      let del = await db.SearchHistory.destroy({
+        where: {
+          id: searchId,
+        },
+      });
+      res.send({
+        status: true,
+        data: null,
+        message: "Deleted",
+      });
+      // Check if viewedUserId is valid
+    } else {
+    }
+  });
+};
+
 export const AddCustomer = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {

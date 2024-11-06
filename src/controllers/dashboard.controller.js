@@ -23,6 +23,7 @@ import { CreateSettlementOfferAndNullifyPast } from "./review.controller.js";
 
 import { NotificationType } from "../models/notifications/notificationtypes.js";
 import { addNotification } from "./notification.controller.js";
+import { SearchHistory } from "./user.controller.js";
 
 export const GetBusinessDashboardData = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
@@ -368,11 +369,13 @@ export const SearchUsers = async (req, res) => {
 
       try {
         // Log the search in SearchHistory
-        await db.SearchHistory.create({
-          userId: userId,
-          searchQuery: searchQuery,
-          searchType: searchType,
-        });
+        if (searchType && searchQuery) {
+          await db.SearchHistory.create({
+            userId: userId,
+            searchQuery: searchQuery,
+            searchType: searchType,
+          });
+        }
 
         // Fetch the search results, including filter for review score range if provided
         const users = await db.User.findAll({

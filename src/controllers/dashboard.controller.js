@@ -306,7 +306,7 @@ export const AddProfileView = async (req, res) => {
 //When Business adds a customer
 
 export const SearchUsers = async (req, res) => {
-  const {
+  let {
     searchQuery,
     searchType,
     offset = 0,
@@ -325,8 +325,8 @@ export const SearchUsers = async (req, res) => {
     if (authData) {
       const userId = authData.user.id;
 
-      if (!searchQuery || !searchType) {
-        searchQuery = "name";
+      if (!searchType) {
+        // searchType = "name";
         // return res.status(400).json({
         //   status: false,
         //   message: "Missing search query or search type",

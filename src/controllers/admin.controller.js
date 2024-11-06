@@ -86,12 +86,10 @@ export async function AdminAnalytics(req, res) {
             .send({ status: false, message: "No such user" });
         }
         if (user.role != "admin") {
-          return res
-            .status(200)
-            .send({
-              status: false,
-              message: "Only admin can access this resource",
-            });
+          return res.status(200).send({
+            status: false,
+            message: "Only admin can access this resource",
+          });
         }
 
         let totalCustomers = await db.User.count({

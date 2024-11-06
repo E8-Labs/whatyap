@@ -347,9 +347,9 @@ export const SearchUsers = async (req, res) => {
           driver_license_id: searchQuery,
         };
       } else {
-        return res
-          .status(400)
-          .json({ status: false, message: "Invalid search type" });
+        // return res
+        //   .status(400)
+        //   .json({ status: false, message: "Invalid search type" });
       }
 
       // Filter by role if provided

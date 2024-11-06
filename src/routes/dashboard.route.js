@@ -9,6 +9,7 @@ import {
   CustomersNearMe,
   AddCustomer,
   AddReview,
+  DeleteSearch,
 } from "../controllers/dashboard.controller.js";
 
 const uploadFiles = multer().fields([
@@ -27,11 +28,13 @@ BusinessRouter.get(
   "/businessDashboard",
   verifyJwtToken,
   GetBusinessDashboardData,
-  AddCustomer
+  AddCustomer,
+  DeleteSearch
 );
 
 BusinessRouter.get("/searchCustomers", verifyJwtToken, SearchUsers);
 BusinessRouter.post("/addProfileView", verifyJwtToken, AddProfileView);
+BusinessRouter.post("/deleteSearch", verifyJwtToken, DeleteSearch);
 BusinessRouter.post("/addCustomer", verifyJwtToken, uploadFiles, AddCustomer);
 BusinessRouter.post("/addReview", verifyJwtToken, uploadFiles, AddReview);
 BusinessRouter.get("/customersNear", verifyJwtToken, CustomersNearMe);

@@ -100,6 +100,24 @@ const User = (sequelize, Sequelize) => {
       type: Sequelize.INTEGER,
       allowNull: true,
     },
+    originalTransactionId: {
+      type: Sequelize.STRING,
+      allowNull: true,
+      default: null,
+    },
+    originalPurchaseDate: {
+      //miliseconds
+      type: Sequelize.STRING,
+      allowNull: true,
+      default: null,
+    },
+
+    plan_status: {
+      type: Sequelize.ENUM,
+      values: ["free", "monthly", "yearly", "weekly"],
+      default: "free",
+      allowNull: false,
+    },
   });
 
   User.associate = function (models) {

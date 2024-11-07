@@ -21,6 +21,12 @@ import {
   SearchHistory,
 } from "../controllers/user.controller.js";
 
+import {
+  StoreReceipt,
+  AppleSubscriptionWebhook,
+  ValidateInAppPurchase,
+} from "../controllers/subscription.controller.js";
+
 import { getUserNotifications } from "../controllers/notification.controller.js";
 
 const uploadFiles = multer().fields([
@@ -34,6 +40,10 @@ const uploadMedia = multer().fields([
 ]);
 
 let UserRouter = express.Router();
+
+UserRouter.post("/store_receipt", verifyJwtToken, StoreReceipt);
+UserRouter.post("/validate_purchase", verifyJwtToken, ValidateInAppPurchase);
+UserRouter.post("/subscription_event", AppleSubscriptionWebhook);
 
 UserRouter.post("/sendCustomSms", SendCustomSms);
 

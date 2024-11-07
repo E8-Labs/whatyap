@@ -2,6 +2,7 @@ import db from "../models/index.js";
 import { getTotalYapScore, getTotalReviews } from "../utils/user.utility.js";
 // import AssistantLiteResource from "./assistantliteresource.js";
 // import UserSubscriptionResource from "./usersubscription.resource.js";
+import { getSubscriptionDetails } from "../services/subscriptionService.js";
 
 const Op = db.Sequelize.Op;
 
@@ -37,6 +38,8 @@ async function getUserData(user, currentUser = null) {
     reviews = await getTotalReviews(user);
   }
 
+  const subscriptionDetails = await getSubscriptionDetails(user);
+
   const UserFullResource = {
     id: user.id,
     name: user.name,
@@ -63,6 +66,7 @@ async function getUserData(user, currentUser = null) {
     media: media,
     totalYapScore: totalYapScore,
     totalReviews: reviews,
+    subscription: subscriptionDetails,
   };
 
   return UserFullResource;

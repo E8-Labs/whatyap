@@ -59,12 +59,6 @@ models["Review"] = db.Review;
 db.SettlementOffer = SettlementOffer(sequelize, Sequelize);
 models["SettlementOffer"] = db.SettlementOffer;
 
-db.Chat = Chat(sequelize, Sequelize);
-models["Chat"] = db.Chat;
-
-db.Message = Message(sequelize, Sequelize);
-models["Message"] = db.Message;
-
 db.Notification = Notification(sequelize, Sequelize);
 models["Notification"] = db.Notification;
 
@@ -73,6 +67,12 @@ models["Subscription"] = db.Subscription;
 
 db.SubscriptionHistory = SubscriptionHistory(sequelize, Sequelize);
 models["SubscriptionHistory"] = db.SubscriptionHistory;
+
+db.Chat = Chat(sequelize, Sequelize);
+models["Chat"] = db.Chat;
+
+db.Message = Message(sequelize, Sequelize);
+models["Message"] = db.Message;
 
 Object.keys(models).forEach((modelName) => {
   if (models[modelName].associate) {

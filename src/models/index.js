@@ -11,6 +11,8 @@ import Sequelize from "sequelize";
 import Chat from "./review/chat/chat.model.js";
 import Message from "./review/chat/message.model.js";
 import Notification from "./notifications/notification.model.js";
+import Subscription from "./auth/Subscription.model.js";
+import SubscriptionHistory from "./auth/SubscriptionHistory.model.js";
 
 const sequelize = new Sequelize(
   dbConfig.MYSQL_DB,
@@ -65,6 +67,12 @@ models["Message"] = db.Message;
 
 db.Notification = Notification(sequelize, Sequelize);
 models["Notification"] = db.Notification;
+
+db.Subscription = Subscription(sequelize, Sequelize);
+models["Subscription"] = db.Subscription;
+
+db.SubscriptionHistory = SubscriptionHistory(sequelize, Sequelize);
+models["SubscriptionHistory"] = db.SubscriptionHistory;
 
 Object.keys(models).forEach((modelName) => {
   if (models[modelName].associate) {

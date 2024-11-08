@@ -451,8 +451,10 @@ export const DeleteMedia = async (req, res) => {
     if (authData) {
       let user = await db.User.findByPk(authData.user.id);
       if (typeof req.body.media_id !== "undefined") {
+        console.log("Media Id provided, ");
         let med = await db.UserMedia.findByPk(req.body.media_id);
         if (med) {
+          console.log("Media found with id , ", med.id);
           if (med.url !== null && med.url !== "") {
             try {
               //Add Logic to Delete from server storage
@@ -463,7 +465,7 @@ export const DeleteMedia = async (req, res) => {
               // }
               // console.log("Deleted Media  ", delVideo)
             } catch (error) {
-              console.log("Error deleting existing intro, ", user.intro_video);
+              console.log("Error deleting existing intro, ");
               // res.send({ status: false, message: "Error deleting existing introe ", data: null });
               // return
             }
@@ -483,7 +485,7 @@ export const DeleteMedia = async (req, res) => {
           res.send({ status: true, message: "Media deleted", data: media });
         }
       } else if (typeof req.body.media_url !== "undefined") {
-        let deleted = await db.userMedia.destroy({
+        let deleted = await db.UserMedia.destroy({
           where: {
             url: req.body.media_url,
           },

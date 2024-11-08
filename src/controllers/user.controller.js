@@ -398,7 +398,7 @@ export async function UploadUserMedia(req, res) {
               });
             }
           } else {
-            // //console.log("file type", mime)
+            console.log("file type", mime);
             const fileContent = file.buffer;
             const fieldname = file.fieldname;
             const uploadedFile = await uploadMedia(

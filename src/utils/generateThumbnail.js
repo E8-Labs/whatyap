@@ -60,9 +60,13 @@ export const uploadMedia = (
       }
 
       // Check if the fieldname already has an extension
+      const currentDate = new Date().toISOString().slice(0, 10); // Formats as YYYY-MM-DD
+
       if (!path.extname(fieldname)) {
         // Append the extension if it's missing
-        fieldname += extension;
+        fieldname = `${currentDate}_${fieldname}${extension}`;
+      } else {
+        fieldname = `${currentDate}_${fieldname}`;
       }
 
       const docPath = path.join(docsDir, fieldname);

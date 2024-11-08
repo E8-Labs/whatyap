@@ -19,6 +19,7 @@ import {
   DeleteMedia,
   GetProfileMine,
   SearchHistory,
+  SocialLogin,
 } from "../controllers/user.controller.js";
 
 import {
@@ -49,6 +50,7 @@ UserRouter.post("/sendCustomSms", SendCustomSms);
 
 UserRouter.post("/login", LoginUser);
 UserRouter.post("/register", uploadFiles, RegisterUser);
+UserRouter.post("/SocialLogin", uploadFiles, SocialLogin);
 
 UserRouter.post("/updateProfile", verifyJwtToken, uploadFiles, UpdateProfile);
 UserRouter.post("/checkPhoneNumber", CheckPhoneExists);

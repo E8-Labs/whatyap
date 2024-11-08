@@ -118,6 +118,14 @@ const User = (sequelize, Sequelize) => {
       default: "free",
       allowNull: false,
     },
+    provider_id: {
+      type: Sequelize.STRING,
+      default: "",
+    },
+    provider_name: {
+      type: Sequelize.STRING,
+      default: "Email", //Facebook, Apple, Google
+    },
   });
 
   User.associate = function (models) {

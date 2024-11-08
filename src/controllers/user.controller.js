@@ -179,11 +179,164 @@ export const RegisterUser = async (req, res) => {
       business_website: business_website,
       driver_license_id: driver_license_id,
       driver_license_image: dl_image,
+      plan_status: "free",
     });
   }
 
   const result = await SignUser(user);
   return res.send({ status: true, message: "User registered", data: result });
+};
+
+export const SocialLogin = async (req, res) => {
+  ////console.log("Checking user")
+  // res.send({data: {text: "kanjar Students"}, message: "Chawal Students", status: true})
+  console.log("Data", req.body);
+  const name = req.body.name;
+  const username = req.body.username || "";
+  const email = req.body.email;
+  // const password = req.body.password;
+  const phone = req.body.phone;
+  const business_website = req.body.business_website;
+  const role = req.body.role || "business";
+  const driver_license_id = req.body.driver_license_id || null;
+  let provider_id = req.body.provider_id;
+  let provider_name = req.body.provider_name;
+
+  if (driver_license_id) {
+    const dlUser = await User.findOne({
+      where: {
+        driver_license_id: driver_license_id,
+      },
+    });
+    if (!dlUser) {
+      return res.send({
+        data: null,
+        status: false,
+        message: "User with same driver license id exists",
+      });
+    }
+  }
+
+  const alreadyUser = await User.findOne({
+    where: {
+      provider_id: req.body.provider_id,
+    },
+  });
+
+  if (alreadyUser) {
+    let user = alreadyUser;
+    const result = await SignUser(user);
+    res.send({
+      data: result,
+      status: true,
+      message: "Logged in",
+    });
+    // res.send({ status: false, message: "Email already taken ", data: null });
+  } else {
+    // //////console.log("Hello bro")
+    // res.send("Hello")
+
+    let profile_image = null;
+    let thumbnail_image = null;
+
+    let dl_image = "";
+
+    if (req.files && req.files.media) {
+      let file = req.files.media[0];
+
+      const mediaBuffer = file.buffer;
+      const mediaType = file.mimetype;
+      const mediaExt = path.extname(file.originalname);
+      const mediaFilename = `${Date.now()}${mediaExt}`;
+      console.log("There is a file uploaded");
+
+      profile_image = await uploadMedia(
+        `profile_${mediaFilename}`,
+        mediaBuffer,
+        "image/jpeg",
+        "profile_images"
+      );
+
+      thumbnail_image = await createThumbnailAndUpload(
+        mediaBuffer,
+        mediaFilename,
+        "profile_images"
+      );
+    }
+
+    if (req.files && req.files.driver_license) {
+      let file = req.files.driver_license[0];
+
+      const mediaBuffer = file.buffer;
+      const mediaType = file.mimetype;
+      const mediaExt = path.extname(file.originalname);
+      const mediaFilename = `${Date.now()}${mediaExt}`;
+      console.log("There is a dl image uploaded");
+
+      dl_image = await uploadMedia(
+        `dl_${mediaFilename}`,
+        mediaBuffer,
+        "image/jpeg",
+        "profile_images"
+      );
+
+      //   thumbnail_image = await createThumbnailAndUpload(mediaBuffer, mediaFilename, "profile_images")
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashed = await bcrypt.hash(req.body.provider_id, salt);
+    var userData = {
+      email: email,
+      password: hashed,
+      name: name,
+      phone: phone,
+      username: username,
+      role: role,
+      full_profile_image: profile_image,
+      profile_image: thumbnail_image,
+      business_website: business_website,
+      driver_license_id: driver_license_id,
+      driver_license_image: dl_image,
+      plan_status: "free",
+      provider_id: provider_id,
+      provider_name: provider_name,
+    };
+
+    // userData.password = hashed;
+
+    try {
+      User.create(userData)
+        .then(async (data) => {
+          //console.log("User created ", data.id)
+          let user = data;
+          const result = await SignUser(user);
+          res.send({
+            data: result,
+            status: true,
+            message: "Logged in",
+          });
+        })
+        .catch((err) => {
+          //////console.log("User not created")
+          console.log(err);
+          res.send({
+            message:
+              err.message || "Some error occurred while creating the user.",
+            status: false,
+            data: null,
+          });
+        });
+    } catch (error) {
+      //////console.log("Exception ", error)
+      //////console.log("User not created")
+      //////console.log(error)
+      res.send({
+        message: err.message || "Some error occurred while creating the user.",
+        status: false,
+        data: null,
+      });
+    }
+  }
 };
 
 export async function UploadUserMedia(req, res) {

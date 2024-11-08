@@ -208,7 +208,7 @@ export const SocialLogin = async (req, res) => {
         driver_license_id: driver_license_id,
       },
     });
-    if (!dlUser) {
+    if (dlUser) {
       return res.send({
         data: null,
         status: false,

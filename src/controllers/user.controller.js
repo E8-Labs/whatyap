@@ -212,7 +212,7 @@ export const SocialLogin = async (req, res) => {
       return res.send({
         data: null,
         status: false,
-        message: "User with same driver license id exists",
+        message: "User with same driver license id exists" + driver_license_id,
       });
     }
   }

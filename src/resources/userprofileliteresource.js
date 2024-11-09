@@ -39,6 +39,7 @@ async function getUserData(user, currentUser = null) {
     state: user.state,
     totalYapScore: totalYapScore,
     totalReviews: reviews,
+    createdAt: user.createdAt,
   };
 
   return UserFullResource;

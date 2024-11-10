@@ -13,6 +13,7 @@ import Message from "./review/chat/message.model.js";
 import Notification from "./notifications/notification.model.js";
 import Subscription from "./auth/Subscription.model.js";
 import SubscriptionHistory from "./auth/SubscriptionHistory.model.js";
+import ReviewImage from "./review/reviewimages.model.js";
 
 const sequelize = new Sequelize(
   dbConfig.MYSQL_DB,
@@ -73,6 +74,9 @@ models["Chat"] = db.Chat;
 
 db.Message = Message(sequelize, Sequelize);
 models["Message"] = db.Message;
+
+db.ReviewImage = ReviewImage(sequelize, Sequelize);
+models["ReviewImage"] = db.ReviewImage;
 
 Object.keys(models).forEach((modelName) => {
   if (models[modelName].associate) {

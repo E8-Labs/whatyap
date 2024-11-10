@@ -46,6 +46,12 @@ async function getUserData(review, currentUser = null) {
     });
   }
 
+  let media = await db.ReviewImage.findAll({
+    where: {
+      reviewId: review.id,
+    },
+  });
+
   const UserFullResource = {
     id: review.id,
     service: review.service,
@@ -64,6 +70,7 @@ async function getUserData(review, currentUser = null) {
     reviewStatus: review.reviewStatus,
     newActivityByCustomer: review.newActivityByCustomer,
     newActivityByBusiness: review.newActivityByBusiness,
+    media: media,
   };
 
   return UserFullResource;

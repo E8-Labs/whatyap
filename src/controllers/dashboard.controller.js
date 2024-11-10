@@ -571,7 +571,7 @@ export const AddReview = async (req, res) => {
         return res.send({ status: false, message: "No such user" });
       }
 
-      //Add the review here
+      // Add the review here
       let {
         service,
         amountOfTransaction,
@@ -582,30 +582,39 @@ export const AddReview = async (req, res) => {
         customerId,
         settlementAmount,
       } = req.body;
-      let mediaUrl = "",
-        thumbUrl = "";
+      let mediaUrls = [];
+      let thumbUrls = [];
+
       if (req.files && req.files.media) {
-        let file = req.files.media[0];
-        const mediaBuffer = file.buffer;
-        const mediaType = file.mimetype;
-        const mediaExt = path.extname(file.originalname);
-        const mediaFilename = `${Date.now()}${mediaExt}`;
-        console.log("There is a file uploaded");
+        for (let file of req.files.media) {
+          const mediaBuffer = file.buffer;
+          const mediaExt = path.extname(file.originalname);
+          const mediaFilename = `${Date.now()}${mediaExt}`;
 
-        mediaUrl = await uploadMedia(
-          `review_${mediaFilename}`,
-          mediaBuffer,
-          "image/jpeg",
-          "review_images"
-        );
+          console.log("There is a file uploaded");
 
-        thumbUrl = await createThumbnailAndUpload(
-          mediaBuffer,
-          mediaFilename,
-          "review_images"
-        );
+          // Upload the media file
+          const mediaUrl = await uploadMedia(
+            `review_${mediaFilename}`,
+            mediaBuffer,
+            "image/jpeg",
+            "review_images"
+          );
+
+          // Create the thumbnail for the media file
+          const thumbUrl = await createThumbnailAndUpload(
+            mediaBuffer,
+            mediaFilename,
+            "review_images"
+          );
+
+          // Save the media and thumbnail URLs
+          mediaUrls.push(mediaUrl);
+          thumbUrls.push(thumbUrl);
+        }
       }
 
+      // Create the review record
       let created = await db.Review.create({
         service: service,
         amountOfTransaction: amountOfTransaction,
@@ -613,8 +622,6 @@ export const AddReview = async (req, res) => {
         yapScore: yapScore,
         settlementOffer: settlementOffer,
         notesAboutCustomer: notesAboutCustomer,
-        mediaUrl: mediaUrl,
-        thumbUrl: thumbUrl,
         userId: user.id,
         customerId: customerId,
         settlementAmount: settlementAmount,
@@ -622,24 +629,23 @@ export const AddReview = async (req, res) => {
 
       if (created) {
         let sentOffer = null;
-        console.log("Settlement offer value:", settlementOffer);
-        console.log("Settlement offer type:", typeof settlementOffer);
-        console.log("Settlement amount from body:", settlementAmount);
         if (settlementOffer == true || settlementOffer == "true") {
-          console.log("Adding settlement offer");
           sentOffer = await CreateSettlementOfferAndNullifyPast(
             created,
             user,
             settlementAmount
           );
-          console.log("Settlement");
-          console.log(sentOffer);
-          // if (sentOffer && sentOffer.status) {
-          //   return res.send({ status: true, message: "Sent Settlement Offer" });
-          // } else {
-          //   return res.send({ status: false, message: "No such review" });
-          // }
         }
+
+        // Save the uploaded images in the ReviewImage table
+        for (let i = 0; i < mediaUrls.length; i++) {
+          await db.ReviewImage.create({
+            media_url: mediaUrls[i],
+            thumb_url: thumbUrls[i],
+            reviewId: created.id,
+          });
+        }
+
         let reviewRes = await ReviewResource(created);
         return res.send({
           status: true,

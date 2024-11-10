@@ -72,11 +72,12 @@ models["SubscriptionHistory"] = db.SubscriptionHistory;
 db.Chat = Chat(sequelize, Sequelize);
 models["Chat"] = db.Chat;
 
-db.Message = Message(sequelize, Sequelize);
-models["Message"] = db.Message;
-
 db.ReviewImage = ReviewImage(sequelize, Sequelize);
 models["ReviewImage"] = db.ReviewImage;
+
+//make it the last table
+db.Message = Message(sequelize, Sequelize);
+models["Message"] = db.Message;
 
 Object.keys(models).forEach((modelName) => {
   if (models[modelName].associate) {

@@ -72,7 +72,7 @@ async function getUserData(user, currentUser = null) {
     totalReviews: reviews,
     subscription: subscriptionDetails,
     createdAt: user.createdAt,
-    totalSpent: getTotalSpent(user),
+    totalSpent: await getTotalSpent(user),
   };
 
   return UserFullResource;

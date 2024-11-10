@@ -16,3 +16,12 @@ export const getTotalReviews = async function (user) {
 
   return reviews || 0;
 };
+
+export const getTotalSpent = async function (user) {
+  console.log("Spent loading ", user.id);
+  let reviews = await db.Review.sum("amountOfTransaction", {
+    where: { customerId: user.id },
+  });
+
+  return reviews || 0;
+};

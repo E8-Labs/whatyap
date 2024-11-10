@@ -1,5 +1,9 @@
 import db from "../models/index.js";
-import { getTotalYapScore, getTotalReviews } from "../utils/user.utility.js";
+import {
+  getTotalYapScore,
+  getTotalReviews,
+  getTotalSpent,
+} from "../utils/user.utility.js";
 // import AssistantLiteResource from "./assistantliteresource.js";
 // import UserSubscriptionResource from "./usersubscription.resource.js";
 import { getSubscriptionDetails } from "../services/subscriptionService.js";
@@ -68,6 +72,7 @@ async function getUserData(user, currentUser = null) {
     totalReviews: reviews,
     subscription: subscriptionDetails,
     createdAt: user.createdAt,
+    totalSpent: getTotalSpent(user),
   };
 
   return UserFullResource;

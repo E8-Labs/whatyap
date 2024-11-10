@@ -1,5 +1,9 @@
 import db from "../models/index.js";
-import { getTotalYapScore, getTotalReviews } from "../utils/user.utility.js";
+import {
+  getTotalYapScore,
+  getTotalReviews,
+  getTotalSpent,
+} from "../utils/user.utility.js";
 
 const Op = db.Sequelize.Op;
 
@@ -40,6 +44,7 @@ async function getUserData(user, currentUser = null) {
     totalYapScore: totalYapScore,
     totalReviews: reviews,
     createdAt: user.createdAt,
+    totalSpent: getTotalSpent(user),
   };
 
   return UserFullResource;

@@ -334,24 +334,37 @@ export const SearchUsers = async (req, res) => {
         // });
       }
 
-      let whereClause = {};
+      const whereClause = {
+        [db.Sequelize.Op.or]: [
+          {
+            name: {
+              [db.Sequelize.Op.like]: `%${searchQuery}%`,
+            },
+          },
+          {
+            driver_license_id: {
+              [db.Sequelize.Op.like]: `%${searchQuery}%`,
+            },
+          },
+        ],
+      };
 
       // Search based on the search type
-      if (searchType === "name") {
-        whereClause = {
-          name: {
-            [db.Sequelize.Op.like]: `%${searchQuery}%`,
-          },
-        };
-      } else if (searchType === "driver_license") {
-        whereClause = {
-          driver_license_id: searchQuery,
-        };
-      } else {
-        // return res
-        //   .status(400)
-        //   .json({ status: false, message: "Invalid search type" });
-      }
+      // if (searchType === "name") {
+      //   whereClause = {
+      //     name: {
+      //       [db.Sequelize.Op.like]: `%${searchQuery}%`,
+      //     },
+      //   };
+      // } else if (searchType === "driver_license") {
+      //   whereClause = {
+      //     driver_license_id: searchQuery,
+      //   };
+      // } else {
+      //   // return res
+      //   //   .status(400)
+      //   //   .json({ status: false, message: "Invalid search type" });
+      // }
 
       // Filter by role if provided
       let role = req.query.role || null;
@@ -369,12 +382,21 @@ export const SearchUsers = async (req, res) => {
 
       try {
         // Log the search in SearchHistory
-        if (searchType && searchQuery) {
-          await db.SearchHistory.create({
-            userId: userId,
-            searchQuery: searchQuery,
-            searchType: searchType,
+        if (searchQuery) {
+          let alreadyAdded = await db.SearchHistory.findOne({
+            where: {
+              searchQuery: searchQuery,
+            },
           });
+          if (!alreadyAdded) {
+            await db.SearchHistory.create({
+              userId: userId,
+              searchQuery: searchQuery,
+              searchType: "",
+            });
+          } else {
+            console.log("Already added");
+          }
         }
 
         // Fetch the search results, including filter for review score range if provided
@@ -622,9 +644,9 @@ export const AddReview = async (req, res) => {
       // Create the review record
       let created = await db.Review.create({
         service: service,
-        amountOfTransaction: amountOfTransaction,
+        amountOfTransaction: Number(amountOfTransaction) || 0,
         dateOfTransaction: dateOfTransaction,
-        yapScore: yapScore,
+        yapScore: Number(yapScore),
         settlementOffer: settlementOffer,
         notesAboutCustomer: notesAboutCustomer,
         userId: user.id,

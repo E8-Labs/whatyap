@@ -27,8 +27,9 @@ async function getUserData(review, currentUser = null) {
   // console.log("Reviewer", review.userId);
   let businessRes = await UserProfileLiteResource(business);
 
+  console.log("CustomerID in review is ", review.customerId);
   let customer = await db.User.findByPk(review.customerId);
-  // console.log("Viewed", customer);
+  console.log("Customer in review is ", customer);
   let customerRes = await UserProfileLiteResource(customer);
 
   let settlementOffer = await db.SettlementOffer.findOne({

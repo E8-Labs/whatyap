@@ -334,7 +334,7 @@ export const SearchUsers = async (req, res) => {
         // });
       }
 
-      const whereClause = {
+      let whereClause = {
         [db.Sequelize.Op.or]: [
           {
             name: {

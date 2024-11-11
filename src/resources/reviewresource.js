@@ -5,6 +5,7 @@ import UserProfileLiteResource from "./userprofileliteresource.js";
 const Op = db.Sequelize.Op;
 
 const ReviewResource = async (user, currentUser = null) => {
+  console.log("Getting Rev Res for ", user);
   if (!Array.isArray(user)) {
     //////console.log("Not array")
     return await getUserData(user, currentUser);

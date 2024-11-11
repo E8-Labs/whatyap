@@ -585,6 +585,11 @@ export const AddReview = async (req, res) => {
       let mediaUrls = [];
       let thumbUrls = [];
 
+      let customer = await db.User.findByPk(customerId);
+      if (!customer) {
+        return res.send({ status: false, message: "No such customer" });
+      }
+
       if (req.files && req.files.media) {
         for (let file of req.files.media) {
           const mediaBuffer = file.buffer;

@@ -334,20 +334,23 @@ export const SearchUsers = async (req, res) => {
         // });
       }
 
-      let whereClause = {
-        [db.Sequelize.Op.or]: [
-          {
-            name: {
-              [db.Sequelize.Op.like]: `%${searchQuery}%`,
+      let whereClause = {};
+      if (searchQuery) {
+        whereClause = {
+          [db.Sequelize.Op.or]: [
+            {
+              name: {
+                [db.Sequelize.Op.like]: `%${searchQuery}%`,
+              },
             },
-          },
-          {
-            driver_license_id: {
-              [db.Sequelize.Op.like]: `%${searchQuery}%`,
+            {
+              driver_license_id: {
+                [db.Sequelize.Op.like]: `%${searchQuery}%`,
+              },
             },
-          },
-        ],
-      };
+          ],
+        };
+      }
 
       // Search based on the search type
       // if (searchType === "name") {

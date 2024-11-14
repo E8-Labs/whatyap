@@ -11,6 +11,144 @@ import axios from "axios";
 import chalk from "chalk";
 import nodemailer from "nodemailer";
 import { ReviewTypes } from "../models/review/reviewtypes.js";
+import Review from "../models/review/review.model.js";
+import ReviewResource from "../resources/reviewresource.js";
+import { AccountStatus } from "../models/auth/user.model.js";
+
+export const DeleteAccount = async (req, res) => {
+  console.log("Delete Account");
+  let userId = req.body.userId;
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    console.log("Jwt verify");
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+      if (user && user.role == "admin") {
+        let userToDeleted = await db.User.findByPk(userId);
+        userToDeleted.accountStatus = AccountStatus.Deleted;
+        let saved = await userToDeleted.save();
+        return res.status(200).send({
+          status: true,
+          message: "Account is now deleted from platform.",
+        });
+      } else {
+        return res.status(200).send({
+          status: false,
+          message: "Only admin can access this resource",
+        });
+      }
+    }
+  });
+};
+
+export const SuspendAccount = async (req, res) => {
+  console.log("Suspend Account");
+  let userId = req.body.userId;
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    console.log("Jwt verify");
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+      if (user && user.role == "admin") {
+        let userToDeleted = await db.User.findByPk(userId);
+        userToDeleted.accountStatus = AccountStatus.Suspended;
+        let saved = await userToDeleted.save();
+        return res.status(200).send({
+          status: true,
+          message: "Account is now suspended from platform.",
+        });
+      } else {
+        return res.status(200).send({
+          status: false,
+          message: "Only admin can access this resource",
+        });
+      }
+    }
+  });
+};
+
+export const HideFromPlatform = async (req, res) => {
+  console.log("Load dashboard");
+  let reviewId = req.body.reviewId;
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    console.log("Jwt verify");
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+      if (user && user.role == "admin") {
+        let review = await db.Review.findByPk(reviewId);
+        review.reviewStatus = ReviewTypes.HiddenFromPlatform;
+        let saved = await review.save();
+        return res.status(200).send({
+          status: true,
+          message: "Review is now hidden from platform.",
+        });
+      } else {
+        return res.status(200).send({
+          status: false,
+          message: "Only admin can access this resource",
+        });
+      }
+    }
+  });
+};
+
+export const DeleteFromPlatform = async (req, res) => {
+  console.log("Load dashboard");
+  let reviewId = req.body.reviewId;
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    console.log("Jwt verify");
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+      if (user && user.role == "admin") {
+        let review = await db.Review.findByPk(reviewId);
+        review.reviewStatus = ReviewTypes.DeletedFromPlatform;
+        let saved = await review.save();
+        return res.status(200).send({
+          status: true,
+          message: "Review is now deleted from platform.",
+        });
+      } else {
+        return res.status(200).send({
+          status: false,
+          message: "Only admin can access this resource",
+        });
+      }
+    }
+  });
+};
+
+export const AdminResolutions = async (req, res) => {
+  console.log("Load Resolutions");
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    console.log("Jwt verify");
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+      if (user && user.role == "admin") {
+        let reviews = await db.Review.findAll({
+          where: {
+            [Op.or]: [
+              { reviewStatus: ReviewTypes.Disputed },
+              {
+                createdAt: {
+                  [Op.lt]: new Date(Date.now() - 48 * 60 * 60 * 1000),
+                },
+              },
+            ],
+          },
+        });
+
+        return res.status(200).send({
+          status: true,
+          message: "Reviews to be resolved",
+          data: await ReviewResource(reviews),
+        });
+      } else {
+        return res.status(200).send({
+          status: false,
+          message: "Only admin can access this resource",
+        });
+      }
+    }
+  });
+};
 
 export async function LoadDashboardData(req, res) {
   console.log("Load dashboard");

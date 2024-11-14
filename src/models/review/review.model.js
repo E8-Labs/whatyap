@@ -46,7 +46,7 @@ const Review = (sequelize, Sequelize) => {
     },
     reviewStatus: {
       type: Sequelize.STRING, //""
-      defaultValue: "active", // default is active, disputed, resolved, past, resolvedByAdmin
+      defaultValue: "active", // default is active, disputed, resolved, past, resolvedByAdmin, hiddenFromPlatform
     },
     newActivityByCustomer: {
       type: Sequelize.BOOLEAN, //""

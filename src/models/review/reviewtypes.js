@@ -5,4 +5,6 @@ export const ReviewTypes = {
   Past: "past",
   ResolvedByAdmin: "resolvedByAdmin",
   Settlement: "settlement",
+  HiddenFromPlatform: "hiddenFromPlatform",
+  DeletedFromPlatform: "DeletedFromPlatform",
 };

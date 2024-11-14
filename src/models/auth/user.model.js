@@ -24,6 +24,11 @@ const User = (sequelize, Sequelize) => {
       defaultValue: "customer",
     },
 
+    accountStatus: {
+      type: Sequelize.STRING, //"active", "deleted", "suspended"
+      defaultValue: "active",
+    },
+
     profile_image: {
       // we store smaller image for fast loading here
       type: Sequelize.STRING,
@@ -151,6 +156,12 @@ const User = (sequelize, Sequelize) => {
   };
 
   return User;
+};
+
+export const AccountStatus = {
+  Active: "active",
+  Deleted: "deleted",
+  Suspended: "suspended",
 };
 
 export default User;

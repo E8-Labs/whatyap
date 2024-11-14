@@ -16,7 +16,7 @@ import {
   ensureDirExists,
   uploadMedia,
 } from "../utils/generateThumbnail.js";
-import User from "../models/auth/user.model.js";
+import User, { AccountStatus } from "../models/auth/user.model.js";
 import UserProfileViewResource from "../resources/profileviewresource.js";
 import ReviewResource from "../resources/reviewresource.js";
 import { CreateSettlementOfferAndNullifyPast } from "./review.controller.js";
@@ -24,6 +24,7 @@ import { CreateSettlementOfferAndNullifyPast } from "./review.controller.js";
 import { NotificationType } from "../models/notifications/notificationtypes.js";
 import { addNotification } from "./notification.controller.js";
 import { SearchHistory } from "./user.controller.js";
+import { where } from "sequelize";
 
 export const GetBusinessDashboardData = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
@@ -383,6 +384,8 @@ export const SearchUsers = async (req, res) => {
         whereClause = { ...whereClause, state: state };
       }
 
+      //Fetch only active accounts
+      whereClause = { ...whereClause, status: AccountStatus.Active };
       try {
         // Log the search in SearchHistory
         if (searchQuery) {

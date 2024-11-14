@@ -28,6 +28,9 @@ const UserProfileFullResource = async (user, currentUser = null) => {
 };
 
 async function getUserData(user, currentUser = null) {
+  if (!user) {
+    return null;
+  }
   let media = await db.UserMedia.findAll({
     where: {
       userId: user.id,

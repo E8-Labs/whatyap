@@ -25,6 +25,9 @@ const UserProfileLiteResource = async (user, currentUser = null) => {
 };
 
 async function getUserData(user, currentUser = null) {
+  if (!user) {
+    return null;
+  }
   let totalYapScore = 0;
   let reviews = 0;
   if (user instanceof db.User) {

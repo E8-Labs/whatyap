@@ -124,11 +124,13 @@ export const AdminResolutions = async (req, res) => {
       if (user && user.role == "admin") {
         let reviews = await db.Review.findAll({
           where: {
-            [Op.or]: [
+            [db.Sequelize.Op.or]: [
               { reviewStatus: ReviewTypes.Disputed },
               {
                 createdAt: {
-                  [Op.lt]: new Date(Date.now() - 48 * 60 * 60 * 1000),
+                  [db.Sequelize.Op.lt]: new Date(
+                    Date.now() - 48 * 60 * 60 * 1000
+                  ),
                 },
               },
             ],

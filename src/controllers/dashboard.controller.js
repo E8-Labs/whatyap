@@ -385,7 +385,7 @@ export const SearchUsers = async (req, res) => {
       }
 
       //Fetch only active accounts
-      whereClause = { ...whereClause, status: AccountStatus.Active };
+      whereClause = { ...whereClause, accountStatus: AccountStatus.Active };
       try {
         // Log the search in SearchHistory
         if (searchQuery) {

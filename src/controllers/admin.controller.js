@@ -121,7 +121,8 @@ export const AdminResolutions = async (req, res) => {
     console.log("Jwt verify");
     if (authData) {
       let user = await db.User.findByPk(authData.user.id);
-      if (user && user.role == "admin") {
+      if (user && user.role === "admin") {
+        // Fetch reviews with reviewStatus disputed or older than 48 hours and check for non-null customerId and userId
         let reviews = await db.Review.findAll({
           where: {
             [db.Sequelize.Op.or]: [
@@ -135,6 +136,24 @@ export const AdminResolutions = async (req, res) => {
               },
             ],
           },
+          include: [
+            {
+              model: db.User,
+              as: "User",
+              required: true,
+              where: {
+                id: db.Sequelize.col("Review.userId"),
+              },
+            },
+            {
+              model: db.User,
+              as: "CustomerUser",
+              required: true,
+              where: {
+                id: db.Sequelize.col("Review.customerId"),
+              },
+            },
+          ],
         });
 
         return res.status(200).send({

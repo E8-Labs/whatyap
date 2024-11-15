@@ -518,9 +518,12 @@ export const SearchUsers = async (req, res) => {
       }
 
       // Filter by creation date range
-      if (fromDate && toDate) {
+      if (req.query.fromDate && req.query.toDate) {
         whereClause.createdAt = {
-          [db.Sequelize.Op.between]: [new Date(fromDate), new Date(toDate)],
+          [db.Sequelize.Op.between]: [
+            new Date(req.query.fromDate),
+            new Date(req.query.toDate),
+          ],
         };
       }
 

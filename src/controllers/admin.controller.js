@@ -254,6 +254,9 @@ export async function AdminAnalytics(req, res) {
         let totalCustomers = await db.User.count({
           where: { role: "customer" },
         });
+        let totalBusiness = await db.User.count({
+          where: { role: "business" },
+        });
         let recentBusinesses = await db.User.findAll({
           where: {
             role: "business",

@@ -307,6 +307,164 @@ export const AddProfileView = async (req, res) => {
 
 //When Business adds a customer
 
+// export const SearchUsers = async (req, res) => {
+//   let {
+//     searchQuery,
+//     searchType,
+//     offset = 0,
+//     city,
+//     state,
+//     minScore,
+//     maxScore,
+//   } = req.query;
+
+//   // Verify JWT Token
+//   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+//     if (error) {
+//       return res.status(403).json({ status: false, message: "Invalid Token" });
+//     }
+
+//     if (authData) {
+//       const userId = authData.user.id;
+
+//       if (!searchType) {
+//         // searchType = "name";
+//         // return res.status(400).json({
+//         //   status: false,
+//         //   message: "Missing search query or search type",
+//         // });
+//       }
+
+//       let whereClause = {};
+//       if (searchQuery) {
+//         whereClause = {
+//           [db.Sequelize.Op.or]: [
+//             {
+//               name: {
+//                 [db.Sequelize.Op.like]: `%${searchQuery}%`,
+//               },
+//             },
+//             {
+//               driver_license_id: {
+//                 [db.Sequelize.Op.like]: `%${searchQuery}%`,
+//               },
+//             },
+//           ],
+//         };
+//       }
+
+//       // Search based on the search type
+//       // if (searchType === "name") {
+//       //   whereClause = {
+//       //     name: {
+//       //       [db.Sequelize.Op.like]: `%${searchQuery}%`,
+//       //     },
+//       //   };
+//       // } else if (searchType === "driver_license") {
+//       //   whereClause = {
+//       //     driver_license_id: searchQuery,
+//       //   };
+//       // } else {
+//       //   // return res
+//       //   //   .status(400)
+//       //   //   .json({ status: false, message: "Invalid search type" });
+//       // }
+
+//       // Filter by role if provided
+//       let role = req.query.role || null;
+//       if (role) {
+//         whereClause = { ...whereClause, role: role };
+//       }
+
+//       // Filter by city and state if provided
+//       if (city) {
+//         whereClause = { ...whereClause, city: city };
+//       }
+//       if (state) {
+//         whereClause = { ...whereClause, state: state };
+//       }
+//       if (fromDate && toDate) {
+//         whereClause.createdAt = {
+//           [db.Sequelize.Op.between]: [new Date(fromDate), new Date(toDate)],
+//         };
+//       }
+
+//       //Fetch only active accounts
+//       whereClause = { ...whereClause, accountStatus: AccountStatus.Active };
+//       try {
+//         // Log the search in SearchHistory
+//         if (searchQuery) {
+//           let alreadyAdded = await db.SearchHistory.findOne({
+//             where: {
+//               searchQuery: searchQuery,
+//             },
+//           });
+//           if (!alreadyAdded) {
+//             await db.SearchHistory.create({
+//               userId: userId,
+//               searchQuery: searchQuery,
+//               searchType: "",
+//             });
+//           } else {
+//             console.log("Already added");
+//           }
+//         }
+
+//         // Fetch the search results, including filter for review score range if provided
+//         const users = await db.User.findAll({
+//           where: whereClause,
+//           limit: 10,
+//           offset: parseInt(offset, 10),
+//           include: [
+//             {
+//               model: db.Review,
+//               required: false,
+//               where:
+//                 minScore && maxScore
+//                   ? {
+//                       yapScore: {
+//                         [db.Sequelize.Op.between]: [
+//                           parseFloat(minScore),
+//                           parseFloat(maxScore),
+//                         ],
+//                       },
+//                     }
+//                   : null,
+//             },
+//           ],
+//         });
+
+//         // Prepare the response data, including only users that match filters or have no reviews
+//         const responseData = users.map((user) => ({
+//           id: user.id,
+//           name: user.name,
+//           username: user.username,
+//           profile_image: user.profile_image,
+//           driver_license_id: user.driver_license_id,
+//           full_profile_image: user.full_profile_image,
+//           city: user.city,
+//           state: user.state,
+//           phone: user.phone,
+//           email: user.email,
+//           role: user.role,
+//         }));
+//         let resource = await UserProfileLiteResource(responseData);
+
+//         return res
+//           .status(200)
+//           .json({ status: true, data: resource, message: "Search results" });
+//       } catch (err) {
+//         console.log("Error ", error);
+//         return res.status(200).json({
+//           status: false,
+//           message: "Error fetching search results",
+//           error: err.message,
+//         });
+//       }
+//     }
+//   });
+// };
+
 export const SearchUsers = async (req, res) => {
   let {
     searchQuery,
@@ -316,6 +474,8 @@ export const SearchUsers = async (req, res) => {
     state,
     minScore,
     maxScore,
+    minReviewCount,
+    maxReviewCount,
   } = req.query;
 
   // Verify JWT Token
@@ -326,14 +486,6 @@ export const SearchUsers = async (req, res) => {
 
     if (authData) {
       const userId = authData.user.id;
-
-      if (!searchType) {
-        // searchType = "name";
-        // return res.status(400).json({
-        //   status: false,
-        //   message: "Missing search query or search type",
-        // });
-      }
 
       let whereClause = {};
       if (searchQuery) {
@@ -353,30 +505,11 @@ export const SearchUsers = async (req, res) => {
         };
       }
 
-      // Search based on the search type
-      // if (searchType === "name") {
-      //   whereClause = {
-      //     name: {
-      //       [db.Sequelize.Op.like]: `%${searchQuery}%`,
-      //     },
-      //   };
-      // } else if (searchType === "driver_license") {
-      //   whereClause = {
-      //     driver_license_id: searchQuery,
-      //   };
-      // } else {
-      //   // return res
-      //   //   .status(400)
-      //   //   .json({ status: false, message: "Invalid search type" });
-      // }
-
-      // Filter by role if provided
+      // Filter by role, city, and state if provided
       let role = req.query.role || null;
       if (role) {
         whereClause = { ...whereClause, role: role };
       }
-
-      // Filter by city and state if provided
       if (city) {
         whereClause = { ...whereClause, city: city };
       }
@@ -384,8 +517,16 @@ export const SearchUsers = async (req, res) => {
         whereClause = { ...whereClause, state: state };
       }
 
-      //Fetch only active accounts
+      // Filter by creation date range
+      if (fromDate && toDate) {
+        whereClause.createdAt = {
+          [db.Sequelize.Op.between]: [new Date(fromDate), new Date(toDate)],
+        };
+      }
+
+      // Fetch only active accounts
       whereClause = { ...whereClause, accountStatus: AccountStatus.Active };
+
       try {
         // Log the search in SearchHistory
         if (searchQuery) {
@@ -405,7 +546,29 @@ export const SearchUsers = async (req, res) => {
           }
         }
 
-        // Fetch the search results, including filter for review score range if provided
+        // Prepare review count filter
+        let havingClause = {};
+        if (minReviewCount || maxReviewCount) {
+          havingClause = {
+            [db.Sequelize.Op.and]: [],
+          };
+          if (minReviewCount) {
+            havingClause[db.Sequelize.Op.and].push(
+              db.Sequelize.literal(
+                `COUNT(Review.id) >= ${parseInt(minReviewCount, 10)}`
+              )
+            );
+          }
+          if (maxReviewCount) {
+            havingClause[db.Sequelize.Op.and].push(
+              db.Sequelize.literal(
+                `COUNT(Review.id) <= ${parseInt(maxReviewCount, 10)}`
+              )
+            );
+          }
+        }
+
+        // Fetch the search results
         const users = await db.User.findAll({
           where: whereClause,
           limit: 10,
@@ -414,6 +577,7 @@ export const SearchUsers = async (req, res) => {
             {
               model: db.Review,
               required: false,
+              attributes: [],
               where:
                 minScore && maxScore
                   ? {
@@ -427,9 +591,19 @@ export const SearchUsers = async (req, res) => {
                   : null,
             },
           ],
+          attributes: {
+            include: [
+              [db.Sequelize.literal(`COUNT(Review.id)`), "reviewCount"],
+            ],
+          },
+          group: ["User.id"],
+          having:
+            havingClause[db.Sequelize.Op.and].length > 0
+              ? havingClause
+              : undefined,
         });
 
-        // Prepare the response data, including only users that match filters or have no reviews
+        // Prepare the response data
         const responseData = users.map((user) => ({
           id: user.id,
           name: user.name,
@@ -449,7 +623,7 @@ export const SearchUsers = async (req, res) => {
           .status(200)
           .json({ status: true, data: resource, message: "Search results" });
       } catch (err) {
-        console.log("Error ", error);
+        console.log("Error ", err);
         return res.status(200).json({
           status: false,
           message: "Error fetching search results",

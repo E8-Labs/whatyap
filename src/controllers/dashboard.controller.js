@@ -485,93 +485,58 @@ export const SearchUsers = async (req, res) => {
     if (authData) {
       const userId = authData.user.id;
 
-      let whereClause = {};
+      let whereClause = "`accountStatus` = 'active'";
       if (searchQuery) {
-        whereClause = {
-          [db.Sequelize.Op.or]: [
-            {
-              name: {
-                [db.Sequelize.Op.like]: `%${searchQuery}%`,
-              },
-            },
-            {
-              driver_license_id: {
-                [db.Sequelize.Op.like]: `%${searchQuery}%`,
-              },
-            },
-          ],
-        };
+        whereClause += ` AND (\`name\` LIKE '%${searchQuery}%' OR \`driver_license_id\` LIKE '%${searchQuery}%')`;
       }
-
-      // Additional filters
-      if (city) whereClause.city = city;
-      if (state) whereClause.state = state;
+      if (city) whereClause += ` AND \`city\` = '${city}'`;
+      if (state) whereClause += ` AND \`state\` = '${state}'`;
       if (req.query.fromDate && req.query.toDate) {
-        whereClause.createdAt = {
-          [db.Sequelize.Op.between]: [
-            new Date(req.query.fromDate),
-            new Date(req.query.toDate),
-          ],
-        };
+        whereClause += ` AND \`createdAt\` BETWEEN '${new Date(
+          req.query.fromDate
+        ).toISOString()}' AND '${new Date(req.query.toDate).toISOString()}'`;
       }
 
-      // Active accounts only
-      whereClause.accountStatus = AccountStatus.Active;
-
-      // Having Clause for Review Counts
-      let havingClause = { [db.Sequelize.Op.and]: [] };
+      let havingClause = "";
       if (minReviewCount) {
-        havingClause[db.Sequelize.Op.and].push(
-          db.Sequelize.literal(
-            `COUNT(\`Reviews\`.\`id\`) >= ${parseInt(minReviewCount, 10)}`
-          )
-        );
+        havingClause += `HAVING COUNT(Reviews.id) >= ${parseInt(
+          minReviewCount,
+          10
+        )}`;
       }
       if (maxReviewCount) {
-        havingClause[db.Sequelize.Op.and].push(
-          db.Sequelize.literal(
-            `COUNT(\`Reviews\`.\`id\`) <= ${parseInt(maxReviewCount, 10)}`
-          )
-        );
+        if (havingClause) {
+          havingClause += ` AND COUNT(Reviews.id) <= ${parseInt(
+            maxReviewCount,
+            10
+          )}`;
+        } else {
+          havingClause = `HAVING COUNT(Reviews.id) <= ${parseInt(
+            maxReviewCount,
+            10
+          )}`;
+        }
       }
-      const having =
-        havingClause[db.Sequelize.Op.and].length > 0 ? havingClause : undefined;
 
       try {
-        const users = await db.User.findAll({
-          where: whereClause,
-          limit: 10,
-          offset: parseInt(offset, 10),
-          include: [
-            {
-              model: db.Review,
-              as: "Reviews", // Correct alias for the Review association in User
-              required: false,
-              attributes: [], // Do not include Review fields in the output
-              where:
-                minScore && maxScore
-                  ? {
-                      yapScore: {
-                        [db.Sequelize.Op.between]: [
-                          parseFloat(minScore),
-                          parseFloat(maxScore),
-                        ],
-                      },
-                    }
-                  : null,
-            },
-          ],
-          attributes: {
-            include: [
-              [
-                db.Sequelize.literal(`COUNT(\`Reviews\`.\`id\`)`),
-                "reviewCount",
-              ],
-            ],
-          },
-          group: ["User.id"],
-          having: having,
-        });
+        const users = await db.sequelize.query(
+          `
+          SELECT 
+            Users.*,
+            COUNT(Reviews.id) AS reviewCount
+          FROM 
+            Users
+          LEFT JOIN 
+            Reviews ON Users.id = Reviews.userId
+          WHERE 
+            ${whereClause}
+          GROUP BY 
+            Users.id
+          ${havingClause}
+          LIMIT 10 OFFSET ${parseInt(offset, 10)}
+          `,
+          { type: db.sequelize.QueryTypes.SELECT }
+        );
 
         // Map response data
         const responseData = users.map((user) => ({
@@ -586,6 +551,7 @@ export const SearchUsers = async (req, res) => {
           phone: user.phone,
           email: user.email,
           role: user.role,
+          reviewCount: user.reviewCount,
         }));
 
         return res.status(200).json({

@@ -523,20 +523,14 @@ export const SearchUsers = async (req, res) => {
       if (minReviewCount) {
         havingClause[db.Sequelize.Op.and].push(
           db.Sequelize.literal(
-            `COUNT(\`CustomerUserReviews\`.\`id\`) >= ${parseInt(
-              minReviewCount,
-              10
-            )}`
+            `COUNT(\`CustomerUser\`.\`id\`) >= ${parseInt(minReviewCount, 10)}`
           )
         );
       }
       if (maxReviewCount) {
         havingClause[db.Sequelize.Op.and].push(
           db.Sequelize.literal(
-            `COUNT(\`CustomerUserReviews\`.\`id\`) <= ${parseInt(
-              maxReviewCount,
-              10
-            )}`
+            `COUNT(\`CustomerUser\`.\`id\`) <= ${parseInt(maxReviewCount, 10)}`
           )
         );
       }
@@ -551,9 +545,9 @@ export const SearchUsers = async (req, res) => {
           include: [
             {
               model: db.Review,
-              as: "CustomerUserReviews", // Use the alias for customer reviews
+              as: "CustomerUser", // Correct alias for customer reviews
               required: false,
-              attributes: [], // Exclude Review fields in the output
+              attributes: [], // Do not include Review fields in the output
               where:
                 minScore && maxScore
                   ? {
@@ -570,7 +564,7 @@ export const SearchUsers = async (req, res) => {
           attributes: {
             include: [
               [
-                db.Sequelize.literal(`COUNT(\`CustomerUserReviews\`.\`id\`)`),
+                db.Sequelize.literal(`COUNT(\`CustomerUser\`.\`id\`)`),
                 "reviewCount",
               ],
             ],

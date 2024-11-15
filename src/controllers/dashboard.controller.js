@@ -478,7 +478,6 @@ export const SearchUsers = async (req, res) => {
     maxReviewCount,
   } = req.query;
 
-  // Verify JWT Token
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (error) {
       return res.status(403).json({ status: false, message: "Invalid Token" });
@@ -505,75 +504,42 @@ export const SearchUsers = async (req, res) => {
         };
       }
 
-      // Filter by role, city, and state if provided
-      let role = req.query.role || null;
-      if (role) {
-        whereClause = { ...whereClause, role: role };
-      }
-      if (city) {
-        whereClause = { ...whereClause, city: city };
-      }
-      if (state) {
-        whereClause = { ...whereClause, state: state };
-      }
-
-      // Filter by creation date range
+      // Additional filters
+      if (req.query.role) whereClause.role = req.query.role;
+      if (city) whereClause.city = city;
+      if (state) whereClause.state = state;
       if (req.query.fromDate && req.query.toDate) {
-        const fromDate = new Date(req.query.fromDate);
-        const toDate = new Date(req.query.toDate);
         whereClause.createdAt = {
-          [db.Sequelize.Op.between]: [fromDate, toDate],
+          [db.Sequelize.Op.between]: [
+            new Date(req.query.fromDate),
+            new Date(req.query.toDate),
+          ],
         };
       }
 
-      // Fetch only active accounts
-      whereClause = { ...whereClause, accountStatus: AccountStatus.Active };
+      // Active accounts only
+      whereClause.accountStatus = AccountStatus.Active;
+
+      // Having Clause for Review Counts
+      let havingClause = { [db.Sequelize.Op.and]: [] };
+      if (minReviewCount) {
+        havingClause[db.Sequelize.Op.and].push(
+          db.Sequelize.literal(
+            `COUNT(\`Reviews\`.\`id\`) >= ${parseInt(minReviewCount, 10)}`
+          )
+        );
+      }
+      if (maxReviewCount) {
+        havingClause[db.Sequelize.Op.and].push(
+          db.Sequelize.literal(
+            `COUNT(\`Reviews\`.\`id\`) <= ${parseInt(maxReviewCount, 10)}`
+          )
+        );
+      }
+      const having =
+        havingClause[db.Sequelize.Op.and].length > 0 ? havingClause : undefined;
 
       try {
-        // Log the search in SearchHistory
-        if (searchQuery) {
-          let alreadyAdded = await db.SearchHistory.findOne({
-            where: {
-              searchQuery: searchQuery,
-            },
-          });
-          if (!alreadyAdded) {
-            await db.SearchHistory.create({
-              userId: userId,
-              searchQuery: searchQuery,
-              searchType: "",
-            });
-          } else {
-            console.log("Already added");
-          }
-        }
-
-        // Prepare review count filter
-        let havingClause = {
-          [db.Sequelize.Op.and]: [],
-        };
-
-        if (minReviewCount) {
-          havingClause[db.Sequelize.Op.and].push(
-            db.Sequelize.literal(
-              `COUNT(Review.id) >= ${parseInt(minReviewCount, 10)}`
-            )
-          );
-        }
-        if (maxReviewCount) {
-          havingClause[db.Sequelize.Op.and].push(
-            db.Sequelize.literal(
-              `COUNT(Review.id) <= ${parseInt(maxReviewCount, 10)}`
-            )
-          );
-        }
-
-        const having =
-          havingClause[db.Sequelize.Op.and].length > 0
-            ? havingClause
-            : undefined;
-
-        // Fetch the search results
         const users = await db.User.findAll({
           where: whereClause,
           limit: 10,
@@ -581,8 +547,9 @@ export const SearchUsers = async (req, res) => {
           include: [
             {
               model: db.Review,
+              as: "Reviews", // Alias must match the one in User model association
               required: false,
-              attributes: [],
+              attributes: [], // Do not include Review fields in the output
               where:
                 minScore && maxScore
                   ? {
@@ -598,14 +565,17 @@ export const SearchUsers = async (req, res) => {
           ],
           attributes: {
             include: [
-              [db.Sequelize.literal(`COUNT(Review.id)`), "reviewCount"],
+              [
+                db.Sequelize.literal(`COUNT(\`Reviews\`.\`id\`)`),
+                "reviewCount",
+              ],
             ],
           },
           group: ["User.id"],
           having: having,
         });
 
-        // Prepare the response data
+        // Map response data
         const responseData = users.map((user) => ({
           id: user.id,
           name: user.name,
@@ -619,11 +589,14 @@ export const SearchUsers = async (req, res) => {
           email: user.email,
           role: user.role,
         }));
-        let resource = await UserProfileLiteResource(responseData);
 
         return res
           .status(200)
-          .json({ status: true, data: resource, message: "Search results" });
+          .json({
+            status: true,
+            data: responseData,
+            message: "Search results",
+          });
       } catch (err) {
         console.error("Error fetching search results:", err);
         return res.status(500).json({

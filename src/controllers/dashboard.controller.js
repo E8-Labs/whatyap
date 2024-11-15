@@ -523,14 +523,14 @@ export const SearchUsers = async (req, res) => {
       if (minReviewCount) {
         havingClause[db.Sequelize.Op.and].push(
           db.Sequelize.literal(
-            `COUNT(\`CustomerUser\`.\`id\`) >= ${parseInt(minReviewCount, 10)}`
+            `COUNT(\`Reviews\`.\`id\`) >= ${parseInt(minReviewCount, 10)}`
           )
         );
       }
       if (maxReviewCount) {
         havingClause[db.Sequelize.Op.and].push(
           db.Sequelize.literal(
-            `COUNT(\`CustomerUser\`.\`id\`) <= ${parseInt(maxReviewCount, 10)}`
+            `COUNT(\`Reviews\`.\`id\`) <= ${parseInt(maxReviewCount, 10)}`
           )
         );
       }
@@ -545,7 +545,7 @@ export const SearchUsers = async (req, res) => {
           include: [
             {
               model: db.Review,
-              as: "CustomerUser", // Correct alias for customer reviews
+              as: "Reviews", // Correct alias for the Review association in User
               required: false,
               attributes: [], // Do not include Review fields in the output
               where:
@@ -564,7 +564,7 @@ export const SearchUsers = async (req, res) => {
           attributes: {
             include: [
               [
-                db.Sequelize.literal(`COUNT(\`CustomerUser\`.\`id\`)`),
+                db.Sequelize.literal(`COUNT(\`Reviews\`.\`id\`)`),
                 "reviewCount",
               ],
             ],
@@ -588,13 +588,11 @@ export const SearchUsers = async (req, res) => {
           role: user.role,
         }));
 
-        return res
-          .status(200)
-          .json({
-            status: true,
-            data: responseData,
-            message: "Search results",
-          });
+        return res.status(200).json({
+          status: true,
+          data: responseData,
+          message: "Search results",
+        });
       } catch (err) {
         console.error("Error fetching search results:", err);
         return res.status(500).json({

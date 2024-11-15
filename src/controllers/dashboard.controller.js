@@ -519,11 +519,10 @@ export const SearchUsers = async (req, res) => {
 
       // Filter by creation date range
       if (req.query.fromDate && req.query.toDate) {
+        const fromDate = new Date(req.query.fromDate);
+        const toDate = new Date(req.query.toDate);
         whereClause.createdAt = {
-          [db.Sequelize.Op.between]: [
-            new Date(req.query.fromDate),
-            new Date(req.query.toDate),
-          ],
+          [db.Sequelize.Op.between]: [fromDate, toDate],
         };
       }
 
@@ -550,26 +549,29 @@ export const SearchUsers = async (req, res) => {
         }
 
         // Prepare review count filter
-        let havingClause = {};
-        if (minReviewCount || maxReviewCount) {
-          havingClause = {
-            [db.Sequelize.Op.and]: [],
-          };
-          if (minReviewCount) {
-            havingClause[db.Sequelize.Op.and].push(
-              db.Sequelize.literal(
-                `COUNT(Review.id) >= ${parseInt(minReviewCount, 10)}`
-              )
-            );
-          }
-          if (maxReviewCount) {
-            havingClause[db.Sequelize.Op.and].push(
-              db.Sequelize.literal(
-                `COUNT(Review.id) <= ${parseInt(maxReviewCount, 10)}`
-              )
-            );
-          }
+        let havingClause = {
+          [db.Sequelize.Op.and]: [],
+        };
+
+        if (minReviewCount) {
+          havingClause[db.Sequelize.Op.and].push(
+            db.Sequelize.literal(
+              `COUNT(Review.id) >= ${parseInt(minReviewCount, 10)}`
+            )
+          );
         }
+        if (maxReviewCount) {
+          havingClause[db.Sequelize.Op.and].push(
+            db.Sequelize.literal(
+              `COUNT(Review.id) <= ${parseInt(maxReviewCount, 10)}`
+            )
+          );
+        }
+
+        const having =
+          havingClause[db.Sequelize.Op.and].length > 0
+            ? havingClause
+            : undefined;
 
         // Fetch the search results
         const users = await db.User.findAll({
@@ -600,10 +602,7 @@ export const SearchUsers = async (req, res) => {
             ],
           },
           group: ["User.id"],
-          having:
-            havingClause[db.Sequelize.Op.and].length > 0
-              ? havingClause
-              : undefined,
+          having: having,
         });
 
         // Prepare the response data
@@ -626,8 +625,8 @@ export const SearchUsers = async (req, res) => {
           .status(200)
           .json({ status: true, data: resource, message: "Search results" });
       } catch (err) {
-        console.log("Error ", err);
-        return res.status(200).json({
+        console.error("Error fetching search results:", err);
+        return res.status(500).json({
           status: false,
           message: "Error fetching search results",
           error: err.message,

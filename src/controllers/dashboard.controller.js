@@ -468,7 +468,6 @@ export const AddProfileView = async (req, res) => {
 export const SearchUsers = async (req, res) => {
   let {
     searchQuery,
-    searchType,
     offset = 0,
     city,
     state,
@@ -505,7 +504,6 @@ export const SearchUsers = async (req, res) => {
       }
 
       // Additional filters
-      if (req.query.role) whereClause.role = req.query.role;
       if (city) whereClause.city = city;
       if (state) whereClause.state = state;
       if (req.query.fromDate && req.query.toDate) {
@@ -525,14 +523,20 @@ export const SearchUsers = async (req, res) => {
       if (minReviewCount) {
         havingClause[db.Sequelize.Op.and].push(
           db.Sequelize.literal(
-            `COUNT(\`Reviews\`.\`id\`) >= ${parseInt(minReviewCount, 10)}`
+            `COUNT(\`CustomerUserReviews\`.\`id\`) >= ${parseInt(
+              minReviewCount,
+              10
+            )}`
           )
         );
       }
       if (maxReviewCount) {
         havingClause[db.Sequelize.Op.and].push(
           db.Sequelize.literal(
-            `COUNT(\`Reviews\`.\`id\`) <= ${parseInt(maxReviewCount, 10)}`
+            `COUNT(\`CustomerUserReviews\`.\`id\`) <= ${parseInt(
+              maxReviewCount,
+              10
+            )}`
           )
         );
       }
@@ -547,9 +551,9 @@ export const SearchUsers = async (req, res) => {
           include: [
             {
               model: db.Review,
-              as: "Reviews", // Alias must match the one in User model association
+              as: "CustomerUserReviews", // Use the alias for customer reviews
               required: false,
-              attributes: [], // Do not include Review fields in the output
+              attributes: [], // Exclude Review fields in the output
               where:
                 minScore && maxScore
                   ? {
@@ -566,7 +570,7 @@ export const SearchUsers = async (req, res) => {
           attributes: {
             include: [
               [
-                db.Sequelize.literal(`COUNT(\`Reviews\`.\`id\`)`),
+                db.Sequelize.literal(`COUNT(\`CustomerUserReviews\`.\`id\`)`),
                 "reviewCount",
               ],
             ],

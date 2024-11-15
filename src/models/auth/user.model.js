@@ -134,7 +134,7 @@ const User = (sequelize, Sequelize) => {
   });
 
   User.associate = function (models) {
-    User.hasMany(models.Review, { foreignKey: "userId" });
+    User.hasMany(models.Review, { foreignKey: "userId", as: "Reviews" });
   };
 
   // Method to calculate total yapScore for a user

@@ -31,6 +31,15 @@ import {
 
 import { getUserNotifications } from "../controllers/notification.controller.js";
 
+import {
+  AddCard,
+  GetUserPaymentSources,
+  DeleteCard,
+  // BuyProduct,
+  MakeDefaultPaymentMethod,
+  PaySettlement,
+} from "../controllers/paymentController.js";
+
 const uploadFiles = multer().fields([
   { name: "media", maxCount: 1 },
   { name: "driver_license", maxCount: 1 },
@@ -81,6 +90,29 @@ UserRouter.post(
   verifyJwtToken,
   uploadFiles,
   PurchaseCredits
+);
+
+//Payment
+UserRouter.post("/add_card", verifyJwtToken, uploadFiles, AddCard);
+UserRouter.post(
+  "/make_default",
+  verifyJwtToken,
+  uploadFiles,
+  MakeDefaultPaymentMethod
+);
+UserRouter.post("/paySettlement", verifyJwtToken, uploadFiles, PaySettlement);
+UserRouter.post("/delete_card", verifyJwtToken, uploadFiles, DeleteCard);
+// UserRouter.get(
+//   "/get_transactions",
+//   verifyJwtToken,
+//   uploadFiles,
+//   GetTransactions
+// );
+UserRouter.get(
+  "/list_cards",
+  verifyJwtToken,
+  uploadFiles,
+  GetUserPaymentSources
 );
 
 export default UserRouter;

@@ -31,9 +31,11 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.15",
     "path": "^0.12.7",
+    "pdfkit": "^0.15.1",
     "sequelize": "^6.37.3",
     "sharp": "^0.33.5",
     "socket.io": "^4.8.0",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "stripe": "^17.3.1"
   }
 }

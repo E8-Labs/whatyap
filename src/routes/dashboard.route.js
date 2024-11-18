@@ -14,7 +14,7 @@ import {
 
 const uploadFiles = multer().fields([
   { name: "media", maxCount: 10 },
-  // { name: "driver_license", maxCount: 1 },
+  { name: "driver_license", maxCount: 1 },
 ]);
 
 const uploadMedia = multer().fields([

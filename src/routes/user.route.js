@@ -26,6 +26,7 @@ import {
   StoreReceipt,
   AppleSubscriptionWebhook,
   ValidateInAppPurchase,
+  PurchaseCredits,
 } from "../controllers/subscription.controller.js";
 
 import { getUserNotifications } from "../controllers/notification.controller.js";
@@ -75,5 +76,11 @@ UserRouter.get("/my_profile", verifyJwtToken, GetProfileMine);
 UserRouter.get("/searchHistory", verifyJwtToken, SearchHistory);
 
 UserRouter.get("/notifications", verifyJwtToken, getUserNotifications);
+UserRouter.post(
+  "/purchaseCredits",
+  verifyJwtToken,
+  uploadFiles,
+  PurchaseCredits
+);
 
 export default UserRouter;

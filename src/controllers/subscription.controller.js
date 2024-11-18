@@ -83,6 +83,37 @@ export const StoreReceipt = async (req, res) => {
 // const router = express.Router();
 // const { User, Subscription, SubscriptionHistory } = require('../models');
 
+//Update User Credits
+export const PurchaseCredits = async (req, res) => {
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    if (authData) {
+      let { productId, points } = req.body;
+      let userId = authData.user.id;
+      let user = await db.User.findByPk(userId);
+      if (user) {
+        user.credits_available = user.credits_available + points;
+        let saved = await user.save();
+        let created = await db.PurchaseHistory.create({
+          productId: productId,
+          isSubscription: false,
+          userId: userId,
+        });
+        return res.send({
+          status: true,
+          message: "Points purchased.",
+          data: created,
+        });
+      }
+    } else {
+      return res.send({
+        status: false,
+        message: "Unauthenticated user",
+        data: null,
+      });
+    }
+  });
+};
+
 //Sandbox mode
 export const AppleSubscriptionWebhook = async (req, res) => {
   const notification = req.body;

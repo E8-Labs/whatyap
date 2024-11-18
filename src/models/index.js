@@ -14,6 +14,7 @@ import Notification from "./notifications/notification.model.js";
 import Subscription from "./auth/Subscription.model.js";
 import SubscriptionHistory from "./auth/SubscriptionHistory.model.js";
 import ReviewImage from "./review/reviewimages.model.js";
+import PurchaseHistory from "./auth/purchase.model.js";
 
 const sequelize = new Sequelize(
   dbConfig.MYSQL_DB,
@@ -74,6 +75,9 @@ models["Chat"] = db.Chat;
 
 db.ReviewImage = ReviewImage(sequelize, Sequelize);
 models["ReviewImage"] = db.ReviewImage;
+
+db.PurchaseHistory = PurchaseHistory(sequelize, Sequelize);
+models["PurchaseHistory"] = db.PurchaseHistory;
 
 //make it the last table
 db.Message = Message(sequelize, Sequelize);

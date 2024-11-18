@@ -554,7 +554,7 @@ export const UpdateProfile = async (req, res) => {
         console.log("There is a file uploaded");
 
         image = await uploadMedia(
-          `profile_${fieldname}`,
+          `profile_${mediaFilename}`,
           mediaBuffer,
           "image/jpeg",
           "profile_images"

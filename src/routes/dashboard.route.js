@@ -27,9 +27,7 @@ let BusinessRouter = express.Router();
 BusinessRouter.get(
   "/businessDashboard",
   verifyJwtToken,
-  GetBusinessDashboardData,
-  AddCustomer,
-  DeleteSearch
+  GetBusinessDashboardData
 );
 
 BusinessRouter.get("/searchCustomers", verifyJwtToken, SearchUsers);

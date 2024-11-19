@@ -15,6 +15,7 @@ import { ReviewTypes } from "../models/review/reviewtypes.js";
 import ReviewResource from "../resources/reviewresource.js";
 import { SettlementOfferTypes } from "../models/review/settlementoffertypes.js";
 import MessageResource from "../resources/messageresource.js";
+import NotificationResource from "../resources/notificationResource.js";
 
 /**
  * Adds a new notification to the Notification table.
@@ -84,13 +85,16 @@ export const getUserNotifications = async (req, res) => {
         id: notification.id,
         type: notification.type,
         fromUser: notification.FromUser,
+        toUser: notification.toUser,
         productId: notification.productId,
         createdAt: notification.createdAt,
       }));
 
+      let notRes = await NotificationResource(responseData);
+
       return res.status(200).json({
         status: true,
-        data: responseData,
+        data: notRes,
         message: "Notifications fetched successfully",
       });
     } catch (err) {

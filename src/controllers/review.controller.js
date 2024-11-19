@@ -137,10 +137,22 @@ export const DisputeReview = async (req, res) => {
               fromUser: user,
               toUser: otherUser,
               type: NotificationType.Disagreement,
-              productId: view.id, // Optional
+              productId: review.id, // Optional
+            });
+
+            let adminUser = await db.User.findOne({
+              where: {
+                role: "admin",
+              },
+            });
+            await addNotification({
+              fromUser: user,
+              toUser: adminUser,
+              type: NotificationType.Disagreement,
+              productId: review.id, // Optional
             });
           } catch (error) {
-            console.log("Error sending not sendmessage chat.controller", error);
+            console.log("Error sending disagreement not ", error);
           }
 
           let reviewRes = await ReviewResource(review);
@@ -189,7 +201,19 @@ export const PaySettlementOffer = async (req, res) => {
               fromUser: user,
               toUser: otherUser,
               type: NotificationType.SettlementAccepted,
-              productId: view.id, // Optional
+              productId: review.id, // Optional
+            });
+
+            let adminUser = await db.User.findOne({
+              where: {
+                role: "admin",
+              },
+            });
+            await addNotification({
+              fromUser: user,
+              toUser: adminUser,
+              type: NotificationType.SettlementAmountPaid,
+              productId: review.id, // Optional
             });
           } catch (error) {
             console.log("Error sending not sendmessage chat.controller", error);

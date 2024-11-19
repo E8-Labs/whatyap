@@ -16,6 +16,8 @@ import {
   ensureDirExists,
   uploadMedia,
 } from "../utils/generateThumbnail.js";
+import { addNotification } from "./notification.controller.js";
+import { NotificationType } from "../models/notifications/notificationtypes.js";
 
 // lib/firebase-admin.js
 // const admin = require('firebase-admin');
@@ -183,6 +185,22 @@ export const RegisterUser = async (req, res) => {
     });
   }
 
+  try {
+    let adminUser = await db.User.findOne({
+      where: {
+        role: "admin",
+      },
+    });
+    await addNotification({
+      fromUser: user,
+      toUser: adminUser,
+      type: NotificationType.NewUser,
+      productId: user.id, // Optional
+    });
+  } catch (error) {
+    console.log("Error sending notification", error);
+  }
+
   const result = await SignUser(user);
   return res.send({ status: true, message: "User registered", data: result });
 };
@@ -309,6 +327,21 @@ export const SocialLogin = async (req, res) => {
         .then(async (data) => {
           //console.log("User created ", data.id)
           let user = data;
+          try {
+            let adminUser = await db.User.findOne({
+              where: {
+                role: "admin",
+              },
+            });
+            await addNotification({
+              fromUser: user,
+              toUser: adminUser,
+              type: NotificationType.NewUser,
+              productId: user.id, // Optional
+            });
+          } catch (error) {
+            console.log("Error sending notification", error);
+          }
           const result = await SignUser(user);
           res.send({
             data: result,

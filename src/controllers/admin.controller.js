@@ -280,6 +280,7 @@ export const AdminResolutions = async (req, res) => {
         //   });
         // }
 
+        console.log("Where Clause ", JSON.stringify(whereClause));
         // Fetch reviews with the dynamically built where clause
         let reviews = await db.Review.findAll({
           where: whereClause,
@@ -307,6 +308,7 @@ export const AdminResolutions = async (req, res) => {
           status: true,
           message: "Reviews to be resolved",
           data: await ReviewResource(reviews),
+          clause: JSON.stringify(whereClause),
         });
       } else {
         return res.status(200).send({

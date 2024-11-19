@@ -554,7 +554,7 @@ export const SearchUsers = async (req, res) => {
           reviewCount: user.reviewCount,
         }));
 
-        let usersFound = await UserProfileLiteResource(responseData);
+        let usersFound = await UserProfileLiteResource(users);
         return res.status(200).json({
           status: true,
           data: usersFound,

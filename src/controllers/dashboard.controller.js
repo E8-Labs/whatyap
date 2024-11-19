@@ -475,6 +475,7 @@ export const SearchUsers = async (req, res) => {
     maxScore,
     minReviewCount,
     maxReviewCount,
+    role,
   } = req.query;
 
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
@@ -488,6 +489,9 @@ export const SearchUsers = async (req, res) => {
       let whereClause = "`accountStatus` = 'active'";
       if (searchQuery) {
         whereClause += ` AND (\`name\` LIKE '%${searchQuery}%' OR \`driver_license_id\` LIKE '%${searchQuery}%')`;
+      }
+      if (role) {
+        whereClause += ` AND \`role\` = '${role}'`;
       }
       if (city) whereClause += ` AND \`city\` = '${city}'`;
       if (state) whereClause += ` AND \`state\` = '${state}'`;

@@ -38,6 +38,7 @@ async function getUserData(user, currentUser = null) {
       yapScore3Digit = Get3DigitYapScore(reviews, totalYapScore / reviews);
     }
   }
+  console.log("Getting user lite res");
   const UserFullResource = {
     id: user.id,
     name: user.name,

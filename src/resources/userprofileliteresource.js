@@ -3,6 +3,7 @@ import {
   getTotalYapScore,
   getTotalReviews,
   getTotalSpent,
+  Get3DigitYapScore,
 } from "../utils/user.utility.js";
 
 const Op = db.Sequelize.Op;

@@ -224,15 +224,6 @@ export const AdminResolutions = async (req, res) => {
           [db.Sequelize.Op.and]: [],
         };
 
-        if (disputeStatus !== undefined) {
-          whereClause[db.Sequelize.Op.and].push({
-            reviewStatus:
-              disputeStatus == "true"
-                ? ReviewTypes.Disputed
-                : { [db.Sequelize.Op.ne]: ReviewTypes.Disputed },
-          });
-        }
-
         if (settlementOffer !== undefined) {
           whereClause[db.Sequelize.Op.and].push({
             settlementOffer: settlementOffer == "true",
@@ -247,26 +238,37 @@ export const AdminResolutions = async (req, res) => {
           if (maxAmount !== undefined) {
             amountClause[db.Sequelize.Op.lte] = parseFloat(maxAmount);
           }
-          whereClause[db.Sequelize.Op.and].push({ amount: amountClause });
+          whereClause[db.Sequelize.Op.and].push({
+            amountOfTransaction: amountClause,
+          });
         }
 
         if (active !== undefined) {
-          whereClause[db.Sequelize.Op.and].push({
-            reviewStatus:
-              active == "true"
-                ? {
-                    [db.Sequelize.Op.in]: [
-                      ReviewTypes.Disputed,
-                      ReviewTypes.Active,
-                    ],
-                  }
-                : {
-                    [db.Sequelize.Op.in]: [
-                      ReviewTypes.Resolved,
-                      ReviewTypes.ResolvedByAdmin,
-                    ],
-                  },
-          });
+          if (disputeStatus !== undefined) {
+            whereClause[db.Sequelize.Op.and].push({
+              reviewStatus:
+                disputeStatus == "true"
+                  ? ReviewTypes.Disputed
+                  : { [db.Sequelize.Op.ne]: ReviewTypes.Disputed },
+            });
+          } else {
+            whereClause[db.Sequelize.Op.and].push({
+              reviewStatus:
+                active == "true"
+                  ? {
+                      [db.Sequelize.Op.in]: [
+                        ReviewTypes.Disputed,
+                        ReviewTypes.Active,
+                      ],
+                    }
+                  : {
+                      [db.Sequelize.Op.in]: [
+                        ReviewTypes.Resolved,
+                        ReviewTypes.ResolvedByAdmin,
+                      ],
+                    },
+            });
+          }
         }
 
         // if (resolved !== undefined) {

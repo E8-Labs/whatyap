@@ -3,6 +3,7 @@ import {
   getTotalYapScore,
   getTotalReviews,
   getTotalSpent,
+  Get3DigitYapScore,
 } from "../utils/user.utility.js";
 // import AssistantLiteResource from "./assistantliteresource.js";
 // import UserSubscriptionResource from "./usersubscription.resource.js";

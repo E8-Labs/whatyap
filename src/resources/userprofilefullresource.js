@@ -40,9 +40,13 @@ async function getUserData(user, currentUser = null) {
   console.log("Type of user is ", typeof user);
   let totalYapScore = 0;
   let reviews = 0;
+  let yapScore3Digit = 0;
   if (user instanceof db.User) {
     totalYapScore = await getTotalYapScore(user);
     reviews = await getTotalReviews(user);
+    if (reviews != 0) {
+      yapScore3Digit = Get3DigitYapScore(reviews, totalYapScore / reviews);
+    }
   }
 
   const subscriptionDetails = await getSubscriptionDetails(user);
@@ -76,6 +80,7 @@ async function getUserData(user, currentUser = null) {
     subscription: subscriptionDetails,
     createdAt: user.createdAt,
     totalSpent: await getTotalSpent(user),
+    yapScore3Digit: yapScore3Digit,
   };
 
   return UserFullResource;

@@ -30,9 +30,13 @@ async function getUserData(user, currentUser = null) {
   }
   let totalYapScore = 0;
   let reviews = 0;
+  let yapScore3Digit = 0;
   if (user instanceof db.User) {
     totalYapScore = await getTotalYapScore(user);
     reviews = await getTotalReviews(user);
+    if (reviews != 0) {
+      yapScore3Digit = Get3DigitYapScore(reviews, totalYapScore / reviews);
+    }
   }
   const UserFullResource = {
     id: user.id,
@@ -48,6 +52,7 @@ async function getUserData(user, currentUser = null) {
     totalReviews: reviews,
     createdAt: user.createdAt,
     totalSpent: await getTotalSpent(user),
+    yapScore3Digit: yapScore3Digit,
   };
 
   return UserFullResource;

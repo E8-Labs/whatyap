@@ -797,6 +797,25 @@ export const AddReview = async (req, res) => {
         }
 
         let reviewRes = await ReviewResource(created);
+
+        try {
+          let admin = await db.User.findOne({
+            where: {
+              role: "admin",
+            },
+          });
+          if (admin) {
+            await addNotification({
+              fromUser: user,
+              toUser: admin,
+              type: NotificationType.NewReviw,
+              productId: created.id, // Optional
+            });
+          }
+        } catch (error) {
+          console.log("Error sending not sendmessage chat.controller", error);
+        }
+
         return res.send({
           status: true,
           message: "Review added",

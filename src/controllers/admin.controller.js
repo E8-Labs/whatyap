@@ -227,7 +227,7 @@ export const AdminResolutions = async (req, res) => {
         if (disputeStatus !== undefined) {
           whereClause[db.Sequelize.Op.and].push({
             reviewStatus:
-              disputeStatus === "true"
+              disputeStatus == "true"
                 ? ReviewTypes.Disputed
                 : { [db.Sequelize.Op.ne]: ReviewTypes.Disputed },
           });
@@ -235,7 +235,7 @@ export const AdminResolutions = async (req, res) => {
 
         if (settlementOffer !== undefined) {
           whereClause[db.Sequelize.Op.and].push({
-            settlementOffer: settlementOffer === "true",
+            settlementOffer: settlementOffer == "true",
           });
         }
 
@@ -253,7 +253,7 @@ export const AdminResolutions = async (req, res) => {
         if (active !== undefined) {
           whereClause[db.Sequelize.Op.and].push({
             reviewStatus:
-              active === "true"
+              active == "true"
                 ? {
                     [db.Sequelize.Op.in]: [
                       ReviewTypes.Disputed,
@@ -261,22 +261,22 @@ export const AdminResolutions = async (req, res) => {
                     ],
                   }
                 : {
-                    [db.Sequelize.Op.notIn]: [
-                      ReviewTypes.Disputed,
-                      ReviewTypes.Active,
+                    [db.Sequelize.Op.in]: [
+                      ReviewTypes.Resolved,
+                      ReviewTypes.ResolvedByAdmin,
                     ],
                   },
           });
         }
 
-        if (resolved !== undefined) {
-          whereClause[db.Sequelize.Op.and].push({
-            reviewStatus:
-              resolved === "true"
-                ? ReviewTypes.Resolved
-                : { [db.Sequelize.Op.ne]: ReviewTypes.Resolved },
-          });
-        }
+        // if (resolved !== undefined) {
+        //   whereClause[db.Sequelize.Op.and].push({
+        //     reviewStatus:
+        //       resolved === "true"
+        //         ? ReviewTypes.Resolved
+        //         : { [db.Sequelize.Op.ne]: ReviewTypes.Resolved },
+        //   });
+        // }
 
         // Fetch reviews with the dynamically built where clause
         let reviews = await db.Review.findAll({

@@ -558,6 +558,7 @@ export const SearchUsers = async (req, res) => {
           reviewCount: user.reviewCount,
         }));
 
+        console.log("Users found in search. Sending to Profile Lite Resource");
         let usersFound = await UserProfileLiteResource(users);
         return res.status(200).json({
           status: true,

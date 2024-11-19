@@ -12,11 +12,12 @@ import { getSubscriptionDetails } from "../services/subscriptionService.js";
 const Op = db.Sequelize.Op;
 
 const UserProfileFullResource = async (user, currentUser = null) => {
+  console.log("Users arried in Profile Lite Resource");
   if (!Array.isArray(user)) {
-    ////////console.log("Not array")
+    //////console.log("Not array")
     return await getUserData(user, currentUser);
   } else {
-    ////////console.log("Is array")
+    //////console.log("Is array")
     const data = [];
     for (let i = 0; i < user.length; i++) {
       const p = await getUserData(user[i], currentUser);
@@ -42,13 +43,14 @@ async function getUserData(user, currentUser = null) {
   let totalYapScore = 0;
   let reviews = 0;
   let yapScore3Digit = 0;
-  if (user instanceof db.User) {
-    totalYapScore = await getTotalYapScore(user);
-    reviews = await getTotalReviews(user);
-    if (reviews != 0) {
-      yapScore3Digit = Get3DigitYapScore(reviews, totalYapScore / reviews);
-    }
+  // if (user instanceof db.User) {
+  //
+  totalYapScore = await getTotalYapScore(user);
+  reviews = await getTotalReviews(user);
+  if (reviews != 0) {
+    yapScore3Digit = Get3DigitYapScore(reviews, totalYapScore / reviews);
   }
+  // }
 
   const subscriptionDetails = await getSubscriptionDetails(user);
 

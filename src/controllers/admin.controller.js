@@ -145,6 +145,63 @@ export const DeleteFromPlatform = async (req, res) => {
   });
 };
 
+// export const AdminResolutions = async (req, res) => {
+//   console.log("Load Resolutions");
+//   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+//     console.log("Jwt verify");
+//     if (authData) {
+//       let user = await db.User.findByPk(authData.user.id);
+//       if (user && user.role === "admin") {
+//         // Fetch reviews with reviewStatus disputed or older than 48 hours and check for non-null customerId and userId
+//         let reviews = await db.Review.findAll({
+//           where: {
+//             [db.Sequelize.Op.or]: [
+//               { reviewStatus: ReviewTypes.Disputed },
+//               { settlementOffer: true },
+//               // {
+//               //   createdAt: {
+//               //     [db.Sequelize.Op.lt]: new Date(
+//               //       Date.now() - 48 * 60 * 60 * 1000
+//               //     ),
+//               //   },
+//               // },
+//             ],
+//           },
+//           include: [
+//             {
+//               model: db.User,
+//               as: "User",
+//               required: true,
+//               where: {
+//                 id: db.Sequelize.col("Review.userId"),
+//               },
+//             },
+//             {
+//               model: db.User,
+//               as: "CustomerUser",
+//               required: true,
+//               where: {
+//                 id: db.Sequelize.col("Review.customerId"),
+//               },
+//             },
+//           ],
+//         });
+
+//         return res.status(200).send({
+//           status: true,
+//           message: "Reviews to be resolved",
+//           data: await ReviewResource(reviews),
+//         });
+//       } else {
+//         return res.status(200).send({
+//           status: false,
+//           message: "Only admin can access this resource",
+//         });
+//       }
+//     }
+//   });
+// };
+
 export const AdminResolutions = async (req, res) => {
   console.log("Load Resolutions");
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
@@ -152,21 +209,78 @@ export const AdminResolutions = async (req, res) => {
     if (authData) {
       let user = await db.User.findByPk(authData.user.id);
       if (user && user.role === "admin") {
-        // Fetch reviews with reviewStatus disputed or older than 48 hours and check for non-null customerId and userId
+        // Extract filters from the request query
+        const {
+          disputeStatus,
+          settlementOffer,
+          minAmount,
+          maxAmount,
+          active,
+          resolved,
+        } = req.query;
+
+        // Build the where clause dynamically based on filters
+        const whereClause = {
+          [db.Sequelize.Op.and]: [],
+        };
+
+        if (disputeStatus !== undefined) {
+          whereClause[db.Sequelize.Op.and].push({
+            reviewStatus:
+              disputeStatus === "true"
+                ? ReviewTypes.Disputed
+                : { [db.Sequelize.Op.ne]: ReviewTypes.Disputed },
+          });
+        }
+
+        if (settlementOffer !== undefined) {
+          whereClause[db.Sequelize.Op.and].push({
+            settlementOffer: settlementOffer === "true",
+          });
+        }
+
+        if (minAmount !== undefined || maxAmount !== undefined) {
+          const amountClause = {};
+          if (minAmount !== undefined) {
+            amountClause[db.Sequelize.Op.gte] = parseFloat(minAmount);
+          }
+          if (maxAmount !== undefined) {
+            amountClause[db.Sequelize.Op.lte] = parseFloat(maxAmount);
+          }
+          whereClause[db.Sequelize.Op.and].push({ amount: amountClause });
+        }
+
+        if (active !== undefined) {
+          whereClause[db.Sequelize.Op.and].push({
+            reviewStatus:
+              active === "true"
+                ? {
+                    [db.Sequelize.Op.in]: [
+                      ReviewTypes.Disputed,
+                      ReviewTypes.Active,
+                    ],
+                  }
+                : {
+                    [db.Sequelize.Op.notIn]: [
+                      ReviewTypes.Disputed,
+                      ReviewTypes.Active,
+                    ],
+                  },
+          });
+        }
+
+        if (resolved !== undefined) {
+          whereClause[db.Sequelize.Op.and].push({
+            reviewStatus:
+              resolved === "true"
+                ? ReviewTypes.Resolved
+                : { [db.Sequelize.Op.ne]: ReviewTypes.Resolved },
+          });
+        }
+
+        // Fetch reviews with the dynamically built where clause
         let reviews = await db.Review.findAll({
-          where: {
-            [db.Sequelize.Op.or]: [
-              { reviewStatus: ReviewTypes.Disputed },
-              { settlementOffer: true },
-              // {
-              //   createdAt: {
-              //     [db.Sequelize.Op.lt]: new Date(
-              //       Date.now() - 48 * 60 * 60 * 1000
-              //     ),
-              //   },
-              // },
-            ],
-          },
+          where: whereClause,
           include: [
             {
               model: db.User,

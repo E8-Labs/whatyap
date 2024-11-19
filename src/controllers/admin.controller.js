@@ -65,6 +65,36 @@ export const SuspendAccount = async (req, res) => {
   });
 };
 
+export const ResolveOrReject = async (req, res) => {
+  console.log("ResoveOrReject");
+  let reviewId = req.body.reviewId;
+  let resolve = req.body.resolve || false;
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    console.log("Jwt verify");
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+      if (user && user.role == "admin") {
+        let review = await db.Review.findByPk(reviewId);
+        if (resolve) {
+          review.reviewStatus = ReviewTypes.ResolvedByAdmin;
+        } else {
+          review.reviewStatus = ReviewTypes.ResjectedByAdmin;
+        }
+        let saved = await review.save();
+        return res.status(200).send({
+          status: true,
+          message: `Review is  + ${resolve ? "resolved" : "rejected"}`,
+        });
+      } else {
+        return res.status(200).send({
+          status: false,
+          message: "Only admin can access this resource",
+        });
+      }
+    }
+  });
+};
+
 export const HideFromPlatform = async (req, res) => {
   console.log("Load dashboard");
   let reviewId = req.body.reviewId;
@@ -127,13 +157,14 @@ export const AdminResolutions = async (req, res) => {
           where: {
             [db.Sequelize.Op.or]: [
               { reviewStatus: ReviewTypes.Disputed },
-              {
-                createdAt: {
-                  [db.Sequelize.Op.lt]: new Date(
-                    Date.now() - 48 * 60 * 60 * 1000
-                  ),
-                },
-              },
+              { settlementOffer: true },
+              // {
+              //   createdAt: {
+              //     [db.Sequelize.Op.lt]: new Date(
+              //       Date.now() - 48 * 60 * 60 * 1000
+              //     ),
+              //   },
+              // },
             ],
           },
           include: [

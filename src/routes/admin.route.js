@@ -9,6 +9,7 @@ import {
   AdminResolutions,
   DeleteAccount,
   SuspendAccount,
+  ResolveOrReject,
 } from "../controllers/admin.controller.js";
 
 import {
@@ -33,6 +34,7 @@ AdminRouter.get("/adminAnalytics", verifyJwtToken, AdminAnalytics);
 AdminRouter.get("/adminResolutions", verifyJwtToken, AdminResolutions);
 AdminRouter.post("/hideFromPlatform", verifyJwtToken, HideFromPlatform);
 AdminRouter.post("/deleteFromPlatform", verifyJwtToken, DeleteFromPlatform);
+AdminRouter.post("/resolveOrReject", verifyJwtToken, ResolveOrReject);
 
 AdminRouter.post("/deleteAccount", verifyJwtToken, DeleteAccount);
 AdminRouter.post("/suspendAccount", verifyJwtToken, SuspendAccount);

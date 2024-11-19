@@ -225,12 +225,14 @@ export const AdminResolutions = async (req, res) => {
         };
 
         if (settlementOffer !== undefined) {
+          console.log("Found Filter Settlement");
           whereClause[db.Sequelize.Op.and].push({
             settlementOffer: settlementOffer == "true",
           });
         }
 
         if (minAmount !== undefined || maxAmount !== undefined) {
+          console.log("Found Filter amount");
           const amountClause = {};
           if (minAmount !== undefined) {
             amountClause[db.Sequelize.Op.gte] = parseFloat(minAmount);
@@ -244,7 +246,9 @@ export const AdminResolutions = async (req, res) => {
         }
 
         if (active !== undefined) {
+          console.log("Found Filter active status", active);
           if (disputeStatus !== undefined) {
+            console.log("Found Filter disputeStatus");
             whereClause[db.Sequelize.Op.and].push({
               reviewStatus:
                 disputeStatus == "true"

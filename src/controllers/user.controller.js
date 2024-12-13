@@ -545,7 +545,7 @@ export const UpdateProfile = async (req, res) => {
       let userId = authData.user.id;
 
       console.log("Update User ", authData.user.email);
-      console.log("Update data ", req);
+      console.log("Update data ", req.body);
       let user = await db.User.findByPk(userId);
 
       let username = req.body.username || user.username;

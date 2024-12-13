@@ -73,9 +73,13 @@ export const GetBusinessDashboardData = async (req, res) => {
       let recentlyViewedData = await UserProfileLiteResource(recentUsers);
 
       // Fetch customers within 50 miles radius
+      let roleToFind = "customer";
+      if (user.role == "customer") {
+        roleToFind = "business";
+      }
       let customersNearby = await db.User.findAll({
         where: {
-          role: "customer",
+          role: roleToFind,
           // lat: {
           //   [db.Sequelize.Op.between]: [user.lat - 0.7, user.lat + 0.7],
           // },
@@ -813,7 +817,7 @@ export const AddReview = async (req, res) => {
             });
           }
         } catch (error) {
-          console.log("Error sending not sendmessage chat.controller", error);
+          console.log("Error sending not Add Review ", error);
         }
 
         return res.send({

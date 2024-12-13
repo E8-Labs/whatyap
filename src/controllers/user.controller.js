@@ -553,6 +553,8 @@ export const UpdateProfile = async (req, res) => {
       let email = req.body.email || user.email;
       let city = req.body.city || user.city;
       let state = req.body.state || user.state;
+      let lat = req.body.lat;
+      let lang = req.body.lang;
 
       let business_website = req.body.business_website || user.business_website;
       let business_industry =
@@ -569,6 +571,10 @@ export const UpdateProfile = async (req, res) => {
       user.business_address = business_address;
 
       user.city = city || "";
+      if (req.body.lat) {
+        user.lat = lat;
+        user.lon = lang;
+      }
       user.state = state || "";
       user.username = username;
       user.name = name;

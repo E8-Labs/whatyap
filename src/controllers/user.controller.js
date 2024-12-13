@@ -856,28 +856,21 @@ export const SearchHistory = async (req, res) => {
           id: userId,
         },
       });
-      const subQuery = db.SearchHistory.findAll({
+      const history = await db.SearchHistory.findAll({
         attributes: [
           "searchQuery",
           [
             db.Sequelize.fn("MAX", db.Sequelize.col("createdAt")),
             "latestCreatedAt",
-          ],
+          ], // Example: Choose the latest createdAt for each searchQuery
         ],
-        where: { userId },
-        group: ["searchQuery"],
-        raw: true,
-      });
-
-      const history = await db.SearchHistory.findAll({
         where: {
-          userId,
-          createdAt: {
-            [db.Sequelize.Op.in]: subQuery.map((row) => row.latestCreatedAt),
-          },
+          userId: userId,
         },
-        order: [["createdAt", "DESC"]],
-        limit: 15,
+        group: ["searchQuery"],
+        order: [
+          [db.Sequelize.fn("MAX", db.Sequelize.col("createdAt")), "DESC"],
+        ],
       });
 
       // let resource = await UserProfileFullResource(user);

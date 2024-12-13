@@ -12,7 +12,7 @@ import { getSubscriptionDetails } from "../services/subscriptionService.js";
 const Op = db.Sequelize.Op;
 
 const UserProfileFullResource = async (user, currentUser = null) => {
-  console.log("Users arried in Profile Lite Resource");
+  // console.log("Users arried in Profile Lite Resource");
   if (!Array.isArray(user)) {
     //////console.log("Not array")
     return await getUserData(user, currentUser);

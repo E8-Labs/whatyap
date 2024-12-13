@@ -1,4 +1,5 @@
 import db from "../models/index.js";
+import { ReviewTypes } from "../models/review/reviewtypes.js";
 
 export const getTotalYapScore = async function (user) {
   console.log("Yap loading ", user.id);
@@ -26,7 +27,17 @@ export function Get3DigitYapScore(numReviews, averageStars) {
 export const getTotalReviews = async function (user) {
   console.log("Reviews loading ", user.id);
   let reviews = await db.Review.count({
-    where: { customerId: user.id },
+    where: {
+      customerId: user.id,
+      reviewStatus: {
+        [db.Sequelize.Op.notIn]: [
+          ReviewTypes.Resolved,
+          ReviewTypes.DeletedFromPlatform,
+          ReviewTypes.HiddenFromPlatform,
+          ReviewTypes.ResolvedByAdmin,
+        ],
+      },
+    },
   });
   console.log("TotalRev ", reviews);
   return reviews || 0;
@@ -36,6 +47,14 @@ export const getTotalSpent = async function (user) {
   console.log("Spent loading ", user.id);
   let reviews = await db.Review.sum("amountOfTransaction", {
     where: { customerId: user.id },
+    reviewStatus: {
+      [db.Sequelize.Op.notIn]: [
+        ReviewTypes.Resolved,
+        ReviewTypes.DeletedFromPlatform,
+        ReviewTypes.HiddenFromPlatform,
+        ReviewTypes.ResolvedByAdmin,
+      ],
+    },
   });
 
   return reviews || 0;

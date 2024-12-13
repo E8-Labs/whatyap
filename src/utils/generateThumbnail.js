@@ -2,6 +2,7 @@ import sharp from "sharp"; // For image processing
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { v4 as uuidv4 } from "uuid";
 // import { generateThumbnail } from '../utils/generateThumbnail.js';
 
 export const generateThumbnail = async (buffer) => {
@@ -61,12 +62,12 @@ export const uploadMedia = (
 
       // Check if the fieldname already has an extension
       const currentDate = new Date().toISOString().slice(0, 10); // Formats as YYYY-MM-DD
-
+      const newUUID = uuidv4();
       if (!path.extname(fieldname)) {
         // Append the extension if it's missing
-        fieldname = `${currentDate}_${fieldname}${extension}`;
+        fieldname = `${currentDate}_${newUUID}_${fieldname}${extension}`;
       } else {
-        fieldname = `${currentDate}_${fieldname}`;
+        fieldname = `${currentDate}_${newUUID}_${fieldname}`;
       }
 
       const docPath = path.join(docsDir, fieldname);

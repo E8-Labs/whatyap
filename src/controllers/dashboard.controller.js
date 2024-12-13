@@ -622,16 +622,19 @@ export const AddCustomer = async (req, res) => {
       const driver_license_id = req.body.driver_license_id || null;
 
       if (req.body.driver_license_id && req.body.driver_license_id != "") {
+        console.log("User provided dlc", req.body.driver_license_id);
         let user = await db.User.findOne({
           where: {
             driver_license_id: driver_license_id,
           },
         });
         if (user) {
+          console.log("User with dlc", user.id);
           return res.send({
             status: false,
             message: "Customer already present ",
             license: req.body.driver_license_id,
+            user: user,
           });
         }
       }

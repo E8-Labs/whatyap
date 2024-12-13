@@ -856,22 +856,19 @@ export const SearchHistory = async (req, res) => {
           id: userId,
         },
       });
-      let history = await db.SearchHistory.findAll({
-        attributes: [
-          [
-            db.Sequelize.fn("DISTINCT", db.Sequelize.col("searchQuery")),
-            "searchQuery",
-          ],
-          "id", // Include other columns as needed
-          "userId",
-          "createdAt",
-        ],
-        where: {
-          userId: userId,
-        },
-        order: [["createdAt", "DESC"]],
-        limit: 5,
-      });
+      const history = await db.sequelize.query(
+        `
+        SELECT DISTINCT ON ("searchQuery") *
+        FROM "SearchHistories"
+        WHERE "userId" = :userId
+        ORDER BY "searchQuery", "createdAt" DESC
+        LIMIT 5;
+        `,
+        {
+          type: db.Sequelize.QueryTypes.SELECT,
+          replacements: { userId },
+        }
+      );
 
       // let resource = await UserProfileFullResource(user);
       res.send({

@@ -859,7 +859,7 @@ export const SearchHistory = async (req, res) => {
       let history = await db.SearchHistory.findAll({
         attributes: [
           [
-            Sequelize.fn("DISTINCT", Sequelize.col("searchQuery")),
+            db.Sequelize.fn("DISTINCT", db.Sequelize.col("searchQuery")),
             "searchQuery",
           ],
           "id", // Include other columns as needed

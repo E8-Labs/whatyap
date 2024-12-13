@@ -698,6 +698,7 @@ export const AddCustomer = async (req, res) => {
         driver_license_id: req.body.driver_license_id,
         driver_license_image: dl_image,
         addedBy: authData.user.id,
+        plan_status: "free",
       });
 
       return res.send({

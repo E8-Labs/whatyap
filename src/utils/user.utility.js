@@ -4,7 +4,17 @@ import { ReviewTypes } from "../models/review/reviewtypes.js";
 export const getTotalYapScore = async function (user) {
   console.log("Yap loading ", user.id);
   const totalYapScore = await db.Review.sum("yapScore", {
-    where: { customerId: user.id },
+    where: {
+      customerId: user.id,
+      reviewStatus: {
+        [db.Sequelize.Op.notIn]: [
+          ReviewTypes.Resolved,
+          ReviewTypes.DeletedFromPlatform,
+          ReviewTypes.HiddenFromPlatform,
+          ReviewTypes.ResolvedByAdmin,
+        ],
+      },
+    },
   });
   console.log("Yap ", totalYapScore);
   return totalYapScore || 0; // Return 0 if no reviews are found
@@ -47,14 +57,14 @@ export const getTotalSpent = async function (user) {
   console.log("Spent loading ", user.id);
   let reviews = await db.Review.sum("amountOfTransaction", {
     where: { customerId: user.id },
-    reviewStatus: {
-      [db.Sequelize.Op.notIn]: [
-        ReviewTypes.Resolved,
-        ReviewTypes.DeletedFromPlatform,
-        ReviewTypes.HiddenFromPlatform,
-        ReviewTypes.ResolvedByAdmin,
-      ],
-    },
+    // reviewStatus: {
+    //   [db.Sequelize.Op.notIn]: [
+    //     ReviewTypes.Resolved,
+    //     ReviewTypes.DeletedFromPlatform,
+    //     ReviewTypes.HiddenFromPlatform,
+    //     ReviewTypes.ResolvedByAdmin,
+    //   ],
+    // },
   });
 
   return reviews || 0;

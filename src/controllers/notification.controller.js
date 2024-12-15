@@ -16,6 +16,8 @@ import ReviewResource from "../resources/reviewresource.js";
 import { SettlementOfferTypes } from "../models/review/settlementoffertypes.js";
 import MessageResource from "../resources/messageresource.js";
 import NotificationResource from "../resources/notificationResource.js";
+import { createNotificaiton } from "../utils/notificationutility.js";
+import { Expo } from "expo-server-sdk";
 
 /**
  * Adds a new notification to the Notification table.
@@ -28,6 +30,39 @@ import NotificationResource from "../resources/notificationResource.js";
  *
  * @returns {Object} - The created notification object.
  */
+
+// Create a new Expo SDK client
+
+export const sendNot = async (to, title, body, data) => {
+  let expo = new Expo();
+  const message = {
+    to: to, //"ExponentPushToken[_pZ2Y6LPv7S9gKi2lJwzif]",
+    sound: "default",
+    title: title, //'Test Notification',
+    body: body, //'This is a test notification message',
+    data: data, //{ message: 'This is a test notification message' },
+  };
+
+  try {
+    // Send the notification
+    let receipts = await expo.sendPushNotificationsAsync([message]);
+    //console.log(receipts);
+    return {
+      status: true,
+      message: "Notification sent successfully",
+      data: receipts,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      status: false,
+      message: "Failed to send notification",
+      error: error.message,
+    };
+    // res.status(500).send({ status: false, message: 'Failed to send notification', error: error.message });
+  }
+};
+
 export const addNotification = async ({
   fromUser,
   toUser,
@@ -41,6 +76,17 @@ export const addNotification = async ({
       type: type,
       productId: productId,
     });
+
+    let sent = await createNotificaiton(
+      fromUser.id,
+      toUser.id,
+      productId,
+      type,
+      getSubtitleForNotification(type, fromUser),
+      additionalData
+    );
+
+    console.log("Sent not to admin ", sent);
 
     return notification;
   } catch (error) {

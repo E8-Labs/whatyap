@@ -555,6 +555,9 @@ export const UpdateProfile = async (req, res) => {
       let state = req.body.state || user.state;
       let lat = req.body.lat;
       let lang = req.body.lang;
+      if (req.body.fcm_token) {
+        user.fcm_token = req.body.fcm_token;
+      }
 
       let business_website = req.body.business_website || user.business_website;
       let business_industry =

@@ -16,7 +16,10 @@ import ReviewResource from "../resources/reviewresource.js";
 import { SettlementOfferTypes } from "../models/review/settlementoffertypes.js";
 import MessageResource from "../resources/messageresource.js";
 import NotificationResource from "../resources/notificationResource.js";
-import { createNotificaiton } from "../utils/notificationutility.js";
+import {
+  createNotificaiton,
+  getSubtitleForNotification,
+} from "../utils/notificationutility.js";
 import { Expo } from "expo-server-sdk";
 
 /**
@@ -83,7 +86,7 @@ export const addNotification = async ({
       productId,
       type,
       getSubtitleForNotification(type, fromUser),
-      additionalData
+      { data: notification }
     );
 
     console.log("Sent not to admin ", sent);

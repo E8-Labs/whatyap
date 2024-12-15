@@ -1,10 +1,10 @@
 import db from "../models/index.js";
-import Expo from "expo-server-sdk";
+import { Expo } from "expo-server-sdk";
 // import { sendNotWithUser } from "../controllers/push.controller.js";
 import { NotificationType } from "../models/notifications/notificationtypes.js";
 
-function getTitleForNotification(type) {
-  if (type === NotificationType.TypeNewUser) {
+export function getTitleForNotification(type) {
+  if (type === NotificationType.NewUser) {
     return "New user";
   }
   if (type === NotificationType.ReplyReview) {
@@ -27,9 +27,13 @@ function getTitleForNotification(type) {
   //     return "Dislike"
   // }
 }
-function getSubtitleForNotification(type, from) {
-  if (type === NotificationType.TypeNewUser) {
-    return from.name + " just signed up";
+export function getSubtitleForNotification(type, from) {
+  if (type === NotificationType.NewUser) {
+    if (from.role == "customer") {
+      return "A new customer (" + from.name + ") just signed up";
+    } else {
+      return "A new business (" + from.name + ") just signed up";
+    }
   }
   if (type === NotificationType.ReplyReview) {
     return "You have a new reply on your review";
@@ -63,19 +67,20 @@ export const createNotificaiton = async (
   // const { UserId, actionType, itemId, message } = req.body;
   let fromUser = await db.User.findByPk(from);
   try {
-    const notification = await db.Notification.create({
-      fromUser: from,
-      toUser: to,
-      productId: itemId,
-      type: notification_type,
-      //   is_read: false,
-      message: message,
-    });
+    // const notification = await db.Notification.create({
+    //   fromUser: from,
+    //   toUser: to,
+    //   productId: itemId,
+    //   type: notification_type,
+    //   //   is_read: false,
+    //   message: message,
+    // });
+    console.log("Sending not type ", notification_type);
     let sent = await sendNotWithUser(
       to,
       getTitleForNotification(notification_type),
       getSubtitleForNotification(notification_type, fromUser),
-      { type: notification_type, data: notification },
+      additionalData,
       additionalData
     );
 

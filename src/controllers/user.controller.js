@@ -814,6 +814,28 @@ export const CheckPhoneExists = async (req, res) => {
   }
 };
 
+export const CheckDriverLicenseExists = async (req, res) => {
+  let driverLicenseId = req.body.driverLicenseId;
+  // phone = phone.replace(/\+/g, "");
+  // let code = req.body.code;
+
+  let user = await db.User.findOne({
+    where: {
+      driver_license_id: driverLicenseId,
+    },
+  });
+
+  if (user) {
+    res.send({
+      status: false,
+      data: null,
+      message: "License Id already exists",
+    });
+  } else {
+    res.send({ status: true, data: null, message: "License does not exist" });
+  }
+};
+
 export const GetProfileWithUsername = async (req, res) => {
   let phone = req.query.username;
   // let code = req.body.code;

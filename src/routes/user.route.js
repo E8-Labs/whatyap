@@ -7,6 +7,7 @@ import {
   SendPhoneVerificationCode,
   VerifyPhoneCode,
   CheckPhoneExists,
+  CheckDriverLicenseExists,
   CheckUsernameExists,
   CheckEmailExists,
   GetProfileWithUsername,
@@ -64,6 +65,7 @@ UserRouter.post("/SocialLogin", uploadFiles, SocialLogin);
 
 UserRouter.post("/updateProfile", verifyJwtToken, uploadFiles, UpdateProfile);
 UserRouter.post("/checkPhoneNumber", CheckPhoneExists);
+UserRouter.post("/checkDriverLicenseExists", CheckDriverLicenseExists);
 UserRouter.post("/checkUsernameExists", CheckUsernameExists);
 UserRouter.get("/getProfileFromUsername", GetProfileWithUsername);
 UserRouter.post("/checkEmailExists", CheckEmailExists);

@@ -498,7 +498,7 @@ export const SearchUsers = async (req, res) => {
         whereClause += ` AND \`role\` = '${role}'`;
       }
       if (city) whereClause += ` AND \`city\` = '${city}'`;
-      if (state) whereClause += ` AND \`state\` = '${state}'`;
+      // if (state) whereClause += ` AND \`state\` = '${state}'`;
       if (req.query.fromDate && req.query.toDate) {
         whereClause += ` AND \`createdAt\` BETWEEN '${new Date(
           req.query.fromDate

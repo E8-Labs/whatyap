@@ -106,6 +106,15 @@ export const HideFromPlatform = async (req, res) => {
         let review = await db.Review.findByPk(reviewId);
         review.reviewStatus = ReviewTypes.HiddenFromPlatform;
         let saved = await review.save();
+
+        let customer = await db.User.findByPk(review.customerId);
+        let business = await db.User.findByPk(review.userId);
+        await addNotification({
+          fromUser: business,
+          toUser: customer,
+          type: NotificationType.ReviewRemoved,
+          productId: review.id, // Optional
+        });
         return res.status(200).send({
           status: true,
           message: "Review is now hidden from platform.",
@@ -131,6 +140,15 @@ export const DeleteFromPlatform = async (req, res) => {
         let review = await db.Review.findByPk(reviewId);
         review.reviewStatus = ReviewTypes.DeletedFromPlatform;
         let saved = await review.save();
+
+        let customer = await db.User.findByPk(review.customerId);
+        let business = await db.User.findByPk(review.userId);
+        await addNotification({
+          fromUser: business,
+          toUser: customer,
+          type: NotificationType.ReviewRemoved,
+          productId: review.id, // Optional
+        });
         return res.status(200).send({
           status: true,
           message: "Review is now deleted from platform.",

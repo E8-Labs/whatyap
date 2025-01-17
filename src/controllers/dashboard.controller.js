@@ -147,6 +147,7 @@ export const CustomersNearMe = async (req, res) => {
         },
         offset: offset, // Ensure offset is a number, not a string
         limit: 20, // Ensure limit is a number, not a string
+        order: [["createdAt", "DESC"]],
       });
 
       let customersNearbyData = await UserProfileLiteResource(customersNearby);
@@ -491,6 +492,7 @@ export const SearchUsers = async (req, res) => {
       const userId = authData.user.id;
 
       let whereClause = "`accountStatus` = 'active'";
+      whereClause += ` AND id not in (${userId})`;
       if (searchQuery) {
         whereClause += ` AND (\`name\` LIKE '%${searchQuery}%' OR \`driver_license_id\` LIKE '%${searchQuery}%')`;
       }
@@ -498,7 +500,7 @@ export const SearchUsers = async (req, res) => {
         whereClause += ` AND \`role\` = '${role}'`;
       }
       if (city) whereClause += ` AND \`city\` = '${city}'`;
-      // if (state) whereClause += ` AND \`state\` = '${state}'`;
+      if (state) whereClause += ` AND \`state\` = '${state}'`;
       if (req.query.fromDate && req.query.toDate) {
         whereClause += ` AND \`createdAt\` BETWEEN '${new Date(
           req.query.fromDate
@@ -542,6 +544,7 @@ export const SearchUsers = async (req, res) => {
             Users.id
           ${havingClause}
           LIMIT 10 OFFSET ${parseInt(offset, 10)}
+          ORDER BY createdAt DESC
           `,
           { type: db.sequelize.QueryTypes.SELECT }
         );
@@ -817,6 +820,21 @@ export const AddReview = async (req, res) => {
               fromUser: user,
               toUser: admin,
               type: NotificationType.NewReviw,
+              productId: created.id, // Optional
+            });
+          }
+          let customer = await db.User.findByPk(customerId);
+          await addNotification({
+            fromUser: user,
+            toUser: customer,
+            type: NotificationType.NewReviw,
+            productId: created.id, // Optional
+          });
+          if (Number(yapScore) == 5) {
+            await addNotification({
+              fromUser: user,
+              toUser: customer,
+              type: NotificationType.FiveStarReview,
               productId: created.id, // Optional
             });
           }

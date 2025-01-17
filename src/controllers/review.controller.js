@@ -86,6 +86,7 @@ export const LoadReviews = async (req, res) => {
         where: condition,
         offset: offset,
         limit: 20,
+        order: [["createdAt", "DESC"]],
       });
 
       let reviewRes = [];

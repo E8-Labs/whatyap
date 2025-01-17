@@ -22,12 +22,21 @@ export function getTitleForNotification(type) {
   if (type === NotificationType.SettlementAmountPaid) {
     return "Settlement paid";
   }
+  if (type === NotificationType.NewReviw) {
+    return `New Review`;
+  }
+  if (type === NotificationType.FiveStarReview) {
+    return ` Wohoo!`;
+  }
+  if (type === NotificationType.ReviewRemoved) {
+    return `Review Removed`;
+  }
   return "New Notification";
   // if(type === NotificationType.TypeDislike){
   //     return "Dislike"
   // }
 }
-export function getSubtitleForNotification(type, from) {
+export function getSubtitleForNotification(type, from, to = null) {
   if (type === NotificationType.NewUser) {
     if (from.role == "customer") {
       return "A new customer (" + from.name + ") just signed up";
@@ -39,6 +48,12 @@ export function getSubtitleForNotification(type, from) {
     return "You have a new reply on your review";
   }
   if (type === NotificationType.Disagreement) {
+    if (to.role == "business") {
+      return `${from.name} disagreed to your review`;
+    }
+    if (to.role == "admin") {
+      return `${from.name} disagreed to a review`;
+    }
     return "You have a dispute";
   }
   if (type === NotificationType.SettlementAccepted) {
@@ -49,6 +64,15 @@ export function getSubtitleForNotification(type, from) {
   }
   if (type === NotificationType.SettlementAmountPaid) {
     return "Settlement offer was paid";
+  }
+  if (type === NotificationType.NewReviw) {
+    return `new yap written by ${from.name}`;
+  }
+  if (type === NotificationType.FiveStarReview) {
+    return `Wohoo! You received a 5 star review`;
+  }
+  if (type === NotificationType.ReviewRemoved) {
+    return `The review has been removed by ${user.name}`;
   }
   return "You have a new notificaiton";
   // if(type === NotificationType.TypeDislike){
@@ -79,7 +103,7 @@ export const createNotificaiton = async (
     let sent = await sendNotWithUser(
       to,
       getTitleForNotification(notification_type),
-      getSubtitleForNotification(notification_type, fromUser),
+      getSubtitleForNotification(notification_type, fromUser, to),
       additionalData,
       additionalData
     );

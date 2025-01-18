@@ -492,7 +492,7 @@ export const SearchUsers = async (req, res) => {
       const userId = authData.user.id;
 
       let whereClause = "`accountStatus` = 'active'";
-      whereClause += ` AND id not in (${userId})`;
+      whereClause += ` AND Users.id not in (${userId})`;
       if (searchQuery) {
         whereClause += ` AND (\`name\` LIKE '%${searchQuery}%' OR \`driver_license_id\` LIKE '%${searchQuery}%')`;
       }
@@ -535,9 +535,9 @@ export const SearchUsers = async (req, res) => {
             Users.*,
             COUNT(Reviews.id) AS reviewCount
           FROM 
-            Users
+            Users 
           LEFT JOIN 
-            Reviews ON Users.id = Reviews.userId
+            Reviews ON  = Reviews.userId
           WHERE 
             ${whereClause}
           GROUP BY 

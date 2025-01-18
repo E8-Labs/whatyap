@@ -536,7 +536,7 @@ export const SearchUsers = async (req, res) => {
           FROM 
             Users 
           LEFT JOIN 
-            Reviews ON  = Reviews.userId
+            Reviews ON  Users.id = Reviews.userId
           WHERE 
             ${whereClause}
           GROUP BY 

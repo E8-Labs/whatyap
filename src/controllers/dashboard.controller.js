@@ -529,8 +529,7 @@ export const SearchUsers = async (req, res) => {
       }
 
       try {
-        const users = await db.sequelize.query(
-          `
+        let query = `
           SELECT 
             Users.*,
             COUNT(Reviews.id) AS reviewCount
@@ -547,9 +546,11 @@ export const SearchUsers = async (req, res) => {
           ORDER BY createdAt DESC
           LIMIT 10 OFFSET ${parseInt(offset, 10)}
           
-          `,
-          { type: db.sequelize.QueryTypes.SELECT }
-        );
+          `;
+        console.log("Query is ", query);
+        const users = await db.sequelize.query(query, {
+          type: db.sequelize.QueryTypes.SELECT,
+        });
 
         // Map response data
         const responseData = users.map((user) => ({

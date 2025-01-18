@@ -542,9 +542,10 @@ export const SearchUsers = async (req, res) => {
             ${whereClause}
           GROUP BY 
             Users.id
+          ORDER BY createdAt DESC
           ${havingClause}
           LIMIT 10 OFFSET ${parseInt(offset, 10)}
-          ORDER BY createdAt DESC
+          
           `,
           { type: db.sequelize.QueryTypes.SELECT }
         );

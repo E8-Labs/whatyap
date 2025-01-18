@@ -542,8 +542,9 @@ export const SearchUsers = async (req, res) => {
             ${whereClause}
           GROUP BY 
             Users.id
-          ORDER BY createdAt DESC
+          
           ${havingClause}
+          ORDER BY createdAt DESC
           LIMIT 10 OFFSET ${parseInt(offset, 10)}
           
           `,

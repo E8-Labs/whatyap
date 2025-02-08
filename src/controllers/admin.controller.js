@@ -324,6 +324,7 @@ export const AdminResolutions = async (req, res) => {
               },
             },
           ],
+          order: [["createdAt", "Desc"]],
         });
 
         return res.status(200).send({
@@ -447,6 +448,20 @@ export async function AdminAnalytics(req, res) {
 
         let disputedStats = await getDisputeStats();
 
+        let totalReviews = await db.Review.count();
+        let settledReviews = await db.Review.count({
+          where: {
+            reviewStatus: {
+              [db.Sequelize.Op.in]: [
+                ReviewTypes.HiddenFromPlatform,
+                ReviewTypes.DeletedFromPlatform,
+                ReviewTypes.Resolved,
+                ReviewTypes.ResolvedByAdmin,
+              ],
+            },
+          },
+        });
+
         return res.send({
           status: true,
           message: "Dashboard data",
@@ -466,6 +481,8 @@ export async function AdminAnalytics(req, res) {
             recentBusinesses: recentBusinesses,
             recentCustomers: recentCustomers,
             disputedStats,
+            totalSettlements: settledReviews,
+            totalReviews: totalReviews,
           },
         });
       } catch (error) {

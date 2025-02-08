@@ -482,7 +482,8 @@ export async function AdminAnalytics(req, res) {
             recentCustomers: recentCustomers,
             disputedStats,
             totalSettlements: settledReviews,
-            totalReviews: totalReviews - settledReviews,
+            totalReviews: totalReviews,
+            openReviews: totalReviews - settledReviews,
           },
         });
       } catch (error) {

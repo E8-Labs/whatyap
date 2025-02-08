@@ -380,6 +380,7 @@ export async function LoadDashboardData(req, res) {
         });
 
         let recentBusinesses = await db.User.findAll({
+          where: { role: "business" },
           limit: 10,
           order: [["createdAt", "DESC"]],
         });

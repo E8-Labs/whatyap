@@ -490,6 +490,7 @@ export const SearchUsers = async (req, res) => {
 
     if (authData) {
       const userId = authData.user.id;
+      let user = await db.User.findByPk(userId);
 
       let whereClause = "`accountStatus` = 'active'";
       whereClause += ` AND Users.id not in (${userId})`;
@@ -497,6 +498,13 @@ export const SearchUsers = async (req, res) => {
         whereClause += ` AND (\`name\` LIKE '%${searchQuery}%' OR \`driver_license_id\` LIKE '%${searchQuery}%')`;
       }
       if (role) {
+        whereClause += ` AND \`role\` = '${role}'`;
+      } else {
+        if (user.role == "customer") {
+          role = "business";
+        } else {
+          role = "customer";
+        }
         whereClause += ` AND \`role\` = '${role}'`;
       }
       if (city) whereClause += ` AND \`city\` = '${city}'`;

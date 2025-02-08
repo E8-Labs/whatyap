@@ -91,7 +91,7 @@ const User = (sequelize, Sequelize) => {
     },
     credits_available: {
       type: Sequelize.INTEGER,
-      defaultValue: 0,
+      defaultValue: 5,
     },
     lat: {
       type: Sequelize.DOUBLE,

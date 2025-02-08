@@ -61,7 +61,7 @@ async function getUserData(user, currentUser = null) {
 
   let unread = await db.Notification.count({
     where: {
-      userId: user.id,
+      toUser: user.id,
       isRead: false,
     },
   });

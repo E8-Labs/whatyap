@@ -173,7 +173,7 @@ export const ReadAllNotificaitons = async (req, res) => {
         },
         {
           where: {
-            userId: user.id,
+            toUser: user.id,
           },
         }
       );

@@ -59,6 +59,12 @@ async function getUserData(user, currentUser = null) {
 
   const subscriptionDetails = await getSubscriptionDetails(user);
 
+  let unread = await db.Notification.count({
+    where: {
+      userId: user.id,
+      isRead: false,
+    },
+  });
   const UserFullResource = {
     id: user.id,
     name: user.name,
@@ -89,6 +95,7 @@ async function getUserData(user, currentUser = null) {
     createdAt: user.createdAt,
     totalSpent: await getTotalSpent(user),
     yapScore3Digit: yapScore3Digit,
+    unread: unread,
   };
 
   return UserFullResource;

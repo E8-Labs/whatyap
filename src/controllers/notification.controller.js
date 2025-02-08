@@ -156,3 +156,33 @@ export const getUserNotifications = async (req, res) => {
     }
   });
 };
+
+export const ReadAllNotificaitons = async (req, res) => {
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    if (authData) {
+      let userId = authData.user.id;
+      let user = await db.User.findOne({
+        where: {
+          id: userId,
+        },
+      });
+
+      let done = await db.Notification.update(
+        {
+          isRead: true,
+        },
+        {
+          where: {
+            userId: user.id,
+          },
+        }
+      );
+      let resource = await UserProfileFullResource(user);
+      res.send({
+        status: true,
+        message: "User notifications read",
+        data: resource,
+      });
+    }
+  });
+};

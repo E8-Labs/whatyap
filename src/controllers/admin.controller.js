@@ -444,6 +444,8 @@ export async function AdminAnalytics(req, res) {
           order: [["createdAt", "DESC"]],
         });
 
+        let disputedStats = await getDisputeStats();
+
         return res.send({
           status: true,
           message: "Dashboard data",
@@ -462,12 +464,55 @@ export async function AdminAnalytics(req, res) {
             totalCustomers: totalCustomers,
             recentBusinesses: recentBusinesses,
             recentCustomers: recentCustomers,
+            disputedStats,
           },
         });
-      } catch (error) {}
+      } catch (error) {
+        console.log(error);
+      }
     }
   });
 }
+
+const getDisputeStats = async () => {
+  // Step 1: Fetch all `productId`s from notifications where type is "Disagreement"
+  const disputeNotifications = await db.Notification.findAll({
+    attributes: ["productId"],
+    where: {
+      type: "Disagreement",
+      productId: { [db.Sequelize.Op.ne]: null }, // Ensure productId is not null
+    },
+    raw: true,
+  });
+
+  const reviewIds = disputeNotifications.map((n) => n.productId); // Assuming productId represents reviewId
+
+  if (reviewIds.length === 0) {
+    return {
+      totalDisputes: 0,
+      resolvedDisputes: 0,
+      openDisputes: 0,
+    };
+  }
+
+  // Step 2: Count total disputes, resolved disputes, and open disputes from the `Review` table
+  const totalDisputes = reviewIds.length;
+
+  const resolvedDisputes = await db.Review.count({
+    where: {
+      id: { [db.Sequelize.Op.in]: reviewIds },
+      status: { [db.Sequelize.Op.in]: ["resolved", "resolvedByAdmin"] },
+    },
+  });
+
+  const openDisputes = totalDisputes - resolvedDisputes; // Remaining disputes are open
+
+  return {
+    totalDisputes,
+    resolvedDisputes,
+    openDisputes,
+  };
+};
 
 const getDailyReviewCounts = async () => {
   const dailyUsers = await db.Review.findAll({

@@ -30,7 +30,10 @@ import {
   PurchaseCredits,
 } from "../controllers/subscription.controller.js";
 
-import { getUserNotifications } from "../controllers/notification.controller.js";
+import {
+  getUserNotifications,
+  ReadAllNotificaitons,
+} from "../controllers/notification.controller.js";
 
 import {
   AddCard,
@@ -87,6 +90,7 @@ UserRouter.get("/my_profile", verifyJwtToken, GetProfileMine);
 UserRouter.get("/searchHistory", verifyJwtToken, SearchHistory);
 
 UserRouter.get("/notifications", verifyJwtToken, getUserNotifications);
+UserRouter.post("/readNotifications", verifyJwtToken, ReadAllNotificaitons);
 UserRouter.post(
   "/purchaseCredits",
   verifyJwtToken,

@@ -501,7 +501,7 @@ const getDisputeStats = async () => {
   const resolvedDisputes = await db.Review.count({
     where: {
       id: { [db.Sequelize.Op.in]: reviewIds },
-      status: { [db.Sequelize.Op.in]: ["resolved", "resolvedByAdmin"] },
+      reviewStatus: { [db.Sequelize.Op.in]: ["resolved", "resolvedByAdmin"] },
     },
   });
 

@@ -14,6 +14,7 @@ import { ReviewTypes } from "../models/review/reviewtypes.js";
 import Review from "../models/review/review.model.js";
 import ReviewResource from "../resources/reviewresource.js";
 import { AccountStatus } from "../models/auth/user.model.js";
+import UserProfileLiteResource from "../resources/userprofileliteresource.js";
 
 export const DeleteAccount = async (req, res) => {
   console.log("Delete Account");
@@ -54,6 +55,31 @@ export const SuspendAccount = async (req, res) => {
         return res.status(200).send({
           status: true,
           message: "Account is now suspended from platform.",
+        });
+      } else {
+        return res.status(200).send({
+          status: false,
+          message: "Only admin can access this resource",
+        });
+      }
+    }
+  });
+};
+
+export const UnSuspendAccount = async (req, res) => {
+  console.log("Suspend Account");
+  let userId = req.body.userId;
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    console.log("Jwt verify");
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+      if (user && user.role == "admin") {
+        let userToDeleted = await db.User.findByPk(userId);
+        userToDeleted.accountStatus = AccountStatus.Active;
+        let saved = await userToDeleted.save();
+        return res.status(200).send({
+          status: true,
+          message: "Account is now unsuspended .",
         });
       } else {
         return res.status(200).send({
@@ -152,6 +178,41 @@ export const DeleteFromPlatform = async (req, res) => {
         return res.status(200).send({
           status: true,
           message: "Review is now deleted from platform.",
+        });
+      } else {
+        return res.status(200).send({
+          status: false,
+          message: "Only admin can access this resource",
+        });
+      }
+    }
+  });
+};
+
+export const GetSuspendedUsers = async (req, res) => {
+  console.log("Suspend Accounts");
+
+  const offset = parseInt(req.query.offset) || 0;
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    console.log("Jwt verify");
+    if (authData) {
+      let user = await db.User.findByPk(authData.user.id);
+      if (user && user.role == "admin") {
+        let users = await db.User.findAll({
+          where: {
+            accountStatus: AccountStatus.Suspended,
+            id: {
+              [db.Sequelize.Op.ne]: user.id, // Exclude the user himself
+            },
+          },
+          offset: offset, // Ensure offset is a number, not a string
+          limit: 20, // Ensure limit is a number, not a string
+          order: [["createdAt", "DESC"]],
+        });
+        return res.status(200).send({
+          status: true,
+          message: "Suspended Users",
+          data: await UserProfileLiteResource(users),
         });
       } else {
         return res.status(200).send({

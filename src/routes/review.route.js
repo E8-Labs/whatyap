@@ -13,6 +13,7 @@ import {
   sendMessage,
   loadChats,
   loadMessages,
+  CreateChat,
 } from "../controllers/chat.controller.js";
 
 const uploadFiles = multer().fields([
@@ -26,6 +27,8 @@ const uploadMedia = multer().fields([
 ]);
 
 let ReviewRouter = express.Router();
+
+ReviewRouter.post("/createChat", verifyJwtToken, CreateChat);
 
 ReviewRouter.get("/loadReviews", verifyJwtToken, uploadFiles, LoadReviews);
 ReviewRouter.post("/disputeReview", verifyJwtToken, uploadFiles, DisputeReview);

@@ -62,6 +62,50 @@ const createOrFindChat = async (user, review) => {
   }
 };
 
+export const CreateChat = async (req, res) => {
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    if (authData) {
+      let chatUserId = req.body.chatUserId;
+      let chatUser = await db.User.findByPk(chatUserId);
+
+      let userId = authData.user.id;
+      let user = await db.User.findByPk(userId);
+
+      let businessId = null,
+        customerId = null;
+
+      if (user.role == "business") {
+        businessId = user.id;
+        customerId = chatUser.id;
+      } else {
+        businessId = chatUser.id; //user.id;
+        customerId = user.id;
+      }
+
+      let chat = await db.Chat.findOne({
+        where: {
+          // reviewId: review.id,
+          customerId,
+          businessId,
+        },
+      });
+
+      // If chat does not exist, create one
+      if (!chat) {
+        chat = await db.Chat.create({
+          // reviewId: review.id,
+          customerId,
+          businessId,
+          lastMessage: "", // Initialize lastMessage empty
+        });
+        //if customer replies for the first time, then change the status to disputed
+      }
+
+      return res.send({ status: true, chat: chat, message: "Chat created" });
+    }
+  });
+};
+
 export const sendMessage = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {

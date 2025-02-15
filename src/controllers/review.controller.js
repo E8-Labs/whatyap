@@ -62,6 +62,7 @@ export const LoadReviews = async (req, res) => {
             { reviewStatus: ReviewTypes.Past },
             { reviewStatus: ReviewTypes.Resolved },
             { reviewStatus: ReviewTypes.ResolvedByAdmin },
+            { reviewStatus: ReviewTypes.ResjectedByAdmin },
           ],
         };
       }

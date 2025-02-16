@@ -74,12 +74,19 @@ export const CreateChat = async (req, res) => {
       let businessId = null,
         customerId = null;
 
+      let business = null,
+        customer = null;
+
       if (user.role == "business") {
         businessId = user.id;
+        business = user;
         customerId = chatUser.id;
+        customer = chatUser;
       } else {
         businessId = chatUser.id; //user.id;
+        business = chatUser;
         customerId = user.id;
+        customer = user;
       }
 
       let chat = await db.Chat.findOne({
@@ -89,6 +96,7 @@ export const CreateChat = async (req, res) => {
           businessId,
         },
       });
+      chat.bus;
 
       // If chat does not exist, create one
       if (!chat) {
@@ -100,6 +108,8 @@ export const CreateChat = async (req, res) => {
         });
         //if customer replies for the first time, then change the status to disputed
       }
+      chat.business = business;
+      chat.customer = customer;
 
       return res.send({ status: true, chat: chat, message: "Chat created" });
     }

@@ -96,7 +96,7 @@ export const CreateChat = async (req, res) => {
           businessId,
         },
       });
-      chat.bus;
+      // chat.bus;
 
       // If chat does not exist, create one
       if (!chat) {
@@ -108,10 +108,21 @@ export const CreateChat = async (req, res) => {
         });
         //if customer replies for the first time, then change the status to disputed
       }
-      chat.business = business;
-      chat.customer = customer;
+      // chat.business = business;
+      // chat.customer = customer;
 
-      return res.send({ status: true, chat: chat, message: "Chat created" });
+      let c = await db.Chat.findOne({
+        where: {
+          id: chat.id,
+        },
+        include: [
+          { model: db.User, as: "Customer" },
+          { model: db.User, as: "Business" },
+          { model: db.Review, as: "Review" },
+        ],
+      });
+
+      return res.send({ status: true, chat: c, message: "Chat created" });
     }
   });
 };

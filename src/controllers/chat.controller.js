@@ -236,6 +236,7 @@ export const loadChats = async (req, res) => {
             { model: db.User, as: "Business" },
             { model: db.Review, as: "Review" },
           ],
+          order: [["createdAt", "DESC"]],
         });
 
         return res.status(200).send({ status: true, chats });

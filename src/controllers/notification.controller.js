@@ -113,6 +113,16 @@ export const getUserNotifications = async (req, res) => {
       let offset = Number(req.query.offset) || 0;
       // Extract user ID from authenticated data
       const userId = authData.user.id;
+      let done = await db.Notification.update(
+        {
+          isRead: true,
+        },
+        {
+          where: {
+            toUser: userId,
+          },
+        }
+      );
 
       // Fetch notifications for the authenticated user (toUser)
       const notifications = await db.Notification.findAll({

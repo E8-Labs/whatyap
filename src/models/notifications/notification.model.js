@@ -19,7 +19,7 @@ const Notification = (sequelize, Sequelize) => {
     isRead: {
       type: Sequelize.BOOLEAN,
       allowNull: false,
-      defaultValue: true,
+      defaultValue: false,
     },
   });
 

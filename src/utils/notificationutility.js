@@ -112,7 +112,7 @@ export const createNotificaiton = async (
     return {
       status: true,
       message: "Notification created successfully.",
-      data: notification,
+      data: sent,
     };
     // res.send({ status: true, message: 'Notification created successfully.', data: notification });
   } catch (err) {

@@ -17,37 +17,163 @@ import { SettlementOfferTypes } from "../models/review/settlementoffertypes.js";
 import { addNotification } from "./notification.controller.js";
 import { NotificationType } from "../models/notifications/notificationtypes.js";
 
+// export const LoadReviews = async (req, res) => {
+//   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+//     if (authData) {
+//       console.log("Auth User Id ", authData.user.id);
+//       let user = await db.User.findByPk(authData.user.id);
+//       if (!user) {
+//         return res.send({ status: false, message: "No such user" });
+//       }
+//       let offset = Number(req.query.offset || 0) || 0;
+//       let reviewStatus = req.query.reviewStatus || ReviewTypes.Posted;
+
+//       let userId = user.id;
+//       if (req.query.userId) {
+//         console.log("UserId found ", userId);
+//         userId = req.query.userId;
+//         user = await db.User.findByPk(userId);
+//       }
+//       console.log("Loading reviews for ", authData.user.id);
+//       let condition = {
+//         reviewStatus: reviewStatus,
+//       };
+
+//       if (reviewStatus == ReviewTypes.Active) {
+//         condition = {
+//           [db.Sequelize.Op.or]: [
+//             { reviewStatus: ReviewTypes.Active },
+//             { reviewStatus: ReviewTypes.Disputed },
+//           ],
+
+//           createdAt: {
+//             [db.Sequelize.Op.gt]: new Date(
+//               new Date() - 7 * 24 * 60 * 60 * 1000
+//             ), // More than 7 days old
+//           },
+//         };
+//       } else if (reviewStatus == ReviewTypes.Settlement) {
+//         // fetch all active which only have
+//         condition = {
+//           [db.Sequelize.Op.or]: [
+//             { reviewStatus: ReviewTypes.Active },
+//             { reviewStatus: ReviewTypes.Disputed },
+//           ],
+//           settlementOffer: true,
+//         };
+//       } else {
+//         //Fetch the past and resolved reviews. We will be running cron job to mark the reviews past if no activity within 48 hours.
+//         condition = {
+//           [db.Sequelize.Op.or]: [
+//             { reviewStatus: ReviewTypes.Past },
+//             { reviewStatus: ReviewTypes.Resolved },
+//             { reviewStatus: ReviewTypes.ResolvedByAdmin },
+//             { reviewStatus: ReviewTypes.ResjectedByAdmin },
+//             {
+//               createdAt: {
+//                 [db.Sequelize.Op.lt]: new Date(
+//                   new Date() - 7 * 24 * 60 * 60 * 1000
+//                 ), // More than 7 days old
+//               },
+//             },
+//           ],
+//         };
+//       }
+
+//       if (user.role == "customer") {
+//         condition = { ...condition, customerId: userId };
+//       } else {
+//         condition = { ...condition, userId: userId };
+//       }
+//       if (req.query.userId) {
+//         // if user wants to review of the other business or customer then this api would be called
+//         if (user.role == "customer") {
+//           condition = { ...condition, customerId: userId };
+//         } else {
+//           condition = { ...condition, userId: userId };
+//         }
+//       }
+
+//       console.log("Condition is ", condition);
+
+//       let reviews = await db.Review.findAll({
+//         where: condition,
+//         offset: offset,
+//         limit: 20,
+//         order: [["createdAt", "DESC"]],
+//       });
+
+//       let reviewRes = [];
+//       if (reviews) {
+//         console.log("Reviews found ", reviews.length);
+//         reviewRes = await ReviewResource(reviews);
+//       }
+
+//       return res.send({
+//         status: true,
+//         message: "All reviews",
+//         data: reviewRes,
+//       });
+//     }
+//   });
+// };
+
 export const LoadReviews = async (req, res) => {
-  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
-    if (authData) {
+  try {
+    JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+      if (!authData) {
+        return res.status(403).send({ status: false, message: "Unauthorized" });
+      }
+
       console.log("Auth User Id ", authData.user.id);
       let user = await db.User.findByPk(authData.user.id);
       if (!user) {
         return res.send({ status: false, message: "No such user" });
       }
+
       let offset = Number(req.query.offset || 0) || 0;
       let reviewStatus = req.query.reviewStatus || ReviewTypes.Posted;
+      let userId = req.query.userId || user.id;
 
-      let userId = user.id;
       if (req.query.userId) {
-        console.log("UserId found ", userId);
-        userId = req.query.userId;
+        console.log("UserId found ", req.query.userId);
         user = await db.User.findByPk(userId);
       }
-      console.log("Loading reviews for ", authData.user.id);
-      let condition = {
-        reviewStatus: reviewStatus,
-      };
 
-      if (reviewStatus == ReviewTypes.Active) {
+      console.log("Loading reviews for ", userId);
+
+      // Define time range for past reviews
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      let condition = {};
+
+      if (reviewStatus === ReviewTypes.Active) {
+        // Keep Active Reviews: If disputed or message was sent in the first 7 days
         condition = {
           [db.Sequelize.Op.or]: [
-            { reviewStatus: ReviewTypes.Active },
-            { reviewStatus: ReviewTypes.Disputed },
+            {
+              reviewStatus: ReviewTypes.Active,
+              createdAt: { [db.Sequelize.Op.gte]: sevenDaysAgo }, // Less than 7 days old
+            },
+            {
+              reviewStatus: ReviewTypes.Disputed,
+              createdAt: { [db.Sequelize.Op.gte]: sevenDaysAgo }, // Disputed within 7 days
+            },
+            {
+              id: {
+                [db.Sequelize.Op.in]: db.Sequelize.literal(`
+                  (SELECT DISTINCT chat.reviewId 
+                   FROM Messages msg 
+                   JOIN Chats chat ON chat.id = msg.chatId 
+                   WHERE msg.createdAt >= DATE_SUB(NOW(), INTERVAL 7 DAY))
+                `),
+              }, // If a message was sent within the first 7 days
+            },
           ],
         };
-      } else if (reviewStatus == ReviewTypes.Settlement) {
-        // fetch all active which only have
+      } else if (reviewStatus === ReviewTypes.Settlement) {
+        // Fetch all active or disputed reviews with a settlement offer
         condition = {
           [db.Sequelize.Op.or]: [
             { reviewStatus: ReviewTypes.Active },
@@ -56,32 +182,43 @@ export const LoadReviews = async (req, res) => {
           settlementOffer: true,
         };
       } else {
-        //Fetch the past and resolved reviews. We will be running cron job to mark the reviews past if no activity within 48 hours.
+        // Past Reviews: Created >7 days ago and (Not disputed OR No messages sent)
         condition = {
           [db.Sequelize.Op.or]: [
-            { reviewStatus: ReviewTypes.Past },
-            { reviewStatus: ReviewTypes.Resolved },
-            { reviewStatus: ReviewTypes.ResolvedByAdmin },
-            { reviewStatus: ReviewTypes.ResjectedByAdmin },
+            {
+              reviewStatus: {
+                [db.Sequelize.Op.in]: [
+                  ReviewTypes.Past,
+                  ReviewTypes.Resolved,
+                  ReviewTypes.ResolvedByAdmin,
+                  ReviewTypes.RejectedByAdmin,
+                ],
+              },
+            },
+            {
+              createdAt: { [db.Sequelize.Op.lt]: sevenDaysAgo }, // More than 7 days old
+              reviewStatus: { [db.Sequelize.Op.ne]: ReviewTypes.Disputed },
+              id: {
+                [db.Sequelize.Op.notIn]: db.Sequelize.literal(`
+                  (SELECT DISTINCT chat.reviewId 
+                   FROM Messages msg 
+                   JOIN Chats chat ON chat.id = msg.chatId 
+                   WHERE msg.createdAt >= DATE_SUB(NOW(), INTERVAL 7 DAY))
+                `),
+              }, // No messages sent within 7 days
+            },
           ],
         };
       }
 
-      if (user.role == "customer") {
+      // Filter by user role
+      if (user.role === "customer") {
         condition = { ...condition, customerId: userId };
       } else {
         condition = { ...condition, userId: userId };
       }
-      if (req.query.userId) {
-        // if user wants to review of the other business or customer then this api would be called
-        if (user.role == "customer") {
-          condition = { ...condition, customerId: userId };
-        } else {
-          condition = { ...condition, userId: userId };
-        }
-      }
 
-      console.log("Condition is ", condition);
+      console.log("Condition is ", JSON.stringify(condition, null, 2));
 
       let reviews = await db.Review.findAll({
         where: condition,
@@ -91,7 +228,7 @@ export const LoadReviews = async (req, res) => {
       });
 
       let reviewRes = [];
-      if (reviews) {
+      if (reviews.length > 0) {
         console.log("Reviews found ", reviews.length);
         reviewRes = await ReviewResource(reviews);
       }
@@ -101,8 +238,11 @@ export const LoadReviews = async (req, res) => {
         message: "All reviews",
         data: reviewRes,
       });
-    }
-  });
+    });
+  } catch (err) {
+    console.error("Error loading reviews:", err);
+    return res.status(500).send({ status: false, message: "Server error" });
+  }
 };
 
 export const DisputeReview = async (req, res) => {

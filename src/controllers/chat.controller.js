@@ -138,18 +138,28 @@ export const sendMessage = async (req, res) => {
             .send({ status: false, message: "No such user" });
         }
 
-        const { reviewId, message } = req.body;
+        const { reviewId, message, chatId } = req.body;
         let review = await db.Review.findByPk(reviewId);
+
         if (!review) {
-          return res
-            .status(404)
-            .send({ status: false, message: "No such review" });
+          if (!chatId) {
+            return res
+              .status(404)
+              .send({ status: false, message: "No such review" });
+          }
         }
         let messageType = "Text";
         // Find or create a chat
-        let chat = await db.Chat.findOne({
-          where: { reviewId, customerId: user.id },
-        });
+        let chat;
+        if (review) {
+          chat = await db.Chat.findOne({
+            where: { reviewId, customerId: user.id },
+          });
+        } else {
+          chat = await db.Chat.findOne({
+            where: { id: chatId },
+          });
+        }
         let firstReply = false;
         if (!chat) {
           // If no chat exists, create one
@@ -174,13 +184,13 @@ export const sendMessage = async (req, res) => {
         await chat.save();
 
         let otherUserId = chat.customerId; //pther user is customer
-        if (otherUserId == user.id) {
+        if (otherUserId == user.id && review) {
           otherUserId = chat.businessId;
           //current user is customer
           review.newActivityByCustomer = true;
           review.newActivityByBusiness = false;
           let saved = await review.save();
-        } else {
+        } else if (review) {
           //current user is business
           review.newActivityByBusiness = true;
           review.newActivityByCustomer = false;
@@ -192,7 +202,9 @@ export const sendMessage = async (req, res) => {
           await addNotification({
             fromUser: user,
             toUser: otherUser,
-            type: NotificationType.ReplyReview,
+            type: review
+              ? NotificationType.ReplyReview
+              : NotificationType.TypeNewMessage,
             productId: newMessage.id, // Optional
           });
         } catch (error) {
@@ -230,6 +242,9 @@ export const loadChats = async (req, res) => {
               { customerId: user.id },
               { businessId: user.id },
             ],
+            reviewId: {
+              [db.Sequelize.Op.eq]: null,
+            },
           },
           include: [
             { model: db.User, as: "Customer" },

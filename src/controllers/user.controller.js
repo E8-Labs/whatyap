@@ -964,7 +964,7 @@ export const SendEmailVerificationCode = async (req, res) => {
       secure: false, // true for 465 (SSL), false for other ports
       auth: {
         user: "salman@e8-labs.com", // Your email address
-        pass: "uzmvwsljflyqnzgu", // Your email password
+        pass: "rwuvoncnjmsqnxbk", // Your email password
       },
     });
     const randomCode = generateRandomCode(5);

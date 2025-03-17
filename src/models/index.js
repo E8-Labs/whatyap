@@ -81,10 +81,6 @@ models["ReviewImage"] = db.ReviewImage;
 db.PurchaseHistory = PurchaseHistory(sequelize, Sequelize);
 models["PurchaseHistory"] = db.PurchaseHistory;
 
-//make it the last table
-db.Message = Message(sequelize, Sequelize);
-models["Message"] = db.Message;
-
 db.PaymentMethod = PaymentMethod(sequelize, Sequelize);
 models["PaymentMethod"] = db.PaymentMethod;
 db.PaymentMethod.belongsTo(db.User, { foreignKey: "userId", as: "user" });
@@ -95,6 +91,10 @@ db.User.hasMany(db.PaymentMethod, {
 
 db.SettlementPayments = SettlementPayments(sequelize, Sequelize);
 models["SettlementPayments"] = db.SettlementPayments;
+
+//make it the last table
+db.Message = Message(sequelize, Sequelize);
+models["Message"] = db.Message;
 
 Object.keys(models).forEach((modelName) => {
   if (models[modelName].associate) {

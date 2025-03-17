@@ -20,7 +20,7 @@ const User = db.User;
 const Op = db.Sequelize.Op;
 
 export const AddCard = async (req, res) => {
-  //console.log("Add card api");
+  console.log("Add card api");
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {
       let user = await db.User.findByPk(authData.user.id);

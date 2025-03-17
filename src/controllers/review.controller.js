@@ -16,7 +16,7 @@ import ReviewResource from "../resources/reviewresource.js";
 import { SettlementOfferTypes } from "../models/review/settlementoffertypes.js";
 import { addNotification } from "./notification.controller.js";
 import { NotificationType } from "../models/notifications/notificationtypes.js";
-
+import * as stripe from "../services/stripe.js";
 // export const LoadReviews = async (req, res) => {
 //   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
 //     if (authData) {
@@ -329,44 +329,92 @@ export const PaySettlementOffer = async (req, res) => {
         settlementOfferId
       );
       if (review && settlementOffer) {
-        //process the payment when payment is integrated. For now just resolve the Review
-        review.reviewStatus = ReviewTypes.Resolved;
-        settlementOffer.status = SettlementOfferTypes.Paid;
-        let offerSaved = await settlementOffer.save();
-        let saved = await review.save();
-        if (saved) {
-          let otherUserId = review.userId;
-          let otherUser = await db.User.findByPk(otherUserId);
+        let settlement = settlementOffer;
+        let amount = settlement.amount;
+        let taxPer = 5; //5%
+        let taxAmount = (amount * 5) / 100;
+        let totalAmount = amount + taxAmount;
 
-          try {
-            await addNotification({
-              fromUser: user,
-              toUser: otherUser,
-              type: NotificationType.SettlementAccepted,
-              productId: review.id, // Optional
-            });
+        let charge = await stripe.ChargeCustomer(totalAmount, user);
+        if (charge.status == true) {
+          let created = await db.SettlementPayments.create({
+            userId: user.id,
+            tax: taxAmount,
+            settlementOfferAmount: amount,
+            totalAmount: totalAmount,
+            status: "success",
+            data: JSON.stringify(charge.payment),
+            settlementOfferId: settlement.id,
+            paymentMethodId: charge.paymentMethodId,
+          });
 
-            let adminUser = await db.User.findOne({
-              where: {
-                role: "admin",
-              },
+          // settlement.status = "paid";
+          review.reviewStatus = ReviewTypes.Resolved;
+          settlement.status = SettlementOfferTypes.Paid;
+          let offerSaved = await settlement.save();
+          let saved = await review.save();
+
+          if (saved) {
+            let otherUserId = review.userId;
+            let otherUser = await db.User.findByPk(otherUserId);
+
+            try {
+              await addNotification({
+                fromUser: user,
+                toUser: otherUser,
+                type: NotificationType.SettlementAccepted,
+                productId: review.id, // Optional
+              });
+
+              let adminUser = await db.User.findOne({
+                where: {
+                  role: "admin",
+                },
+              });
+              await addNotification({
+                fromUser: user,
+                toUser: adminUser,
+                type: NotificationType.SettlementAmountPaid,
+                productId: review.id, // Optional
+              });
+            } catch (error) {
+              console.log(
+                "Error sending not sendmessage chat.controller",
+                error
+              );
+            }
+            let reviewRes = await ReviewResource(review);
+            return res.send({
+              status: true,
+              message: "Review resolved and settlement offer paid",
+              data: reviewRes,
             });
-            await addNotification({
-              fromUser: user,
-              toUser: adminUser,
-              type: NotificationType.SettlementAmountPaid,
-              productId: review.id, // Optional
-            });
-          } catch (error) {
-            console.log("Error sending not sendmessage chat.controller", error);
           }
-          let reviewRes = await ReviewResource(review);
           return res.send({
             status: true,
-            message: "Review resolved and settlement offer paid",
-            data: reviewRes,
+            message: "Payment successfull",
+            // clientSecret: paymentIntent.client_secret,
+          });
+        } else {
+          let created = await db.SettlementPayments.create({
+            userId: user.id,
+            tax: taxAmount,
+            settlementOfferAmount: amount,
+            totalAmount: totalAmount,
+            status: "failed",
+            data: JSON.stringify(charge.payment),
+            settlementOfferId: settlement.id,
+          });
+          console.log(charge);
+          return res.send({
+            status: false,
+            message: "Payment was not processed",
+            // clientSecret: paymentIntent.client_secret,
+            // intent: paymentIntent,
           });
         }
+
+        //process the payment when payment is integrated. For now just resolve the Review
       } else {
         res.send({ status: false, message: "No such review" });
       }

@@ -333,6 +333,7 @@ export async function ChargeCustomer(
             message: "Charge was successful.",
             reason: "succeeded",
             payment: paymentIntent,
+            paymentMethodId: paymentMethodId,
           };
         }
       } catch (error) {

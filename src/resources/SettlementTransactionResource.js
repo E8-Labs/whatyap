@@ -5,6 +5,7 @@ import {
   getTotalSpent,
   Get3DigitYapScore,
 } from "../utils/user.utility.js";
+import ReviewResource from "./reviewresource.js";
 
 const Op = db.Sequelize.Op;
 
@@ -37,7 +38,7 @@ async function getUserData(user, currentUser = null) {
   const UserFullResource = {
     ...user.get(),
     data: null,
-    review,
+    review: await ReviewResource(review),
     settlement,
     description: `Settlement for ${review.service}`,
   };

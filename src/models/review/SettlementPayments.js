@@ -28,6 +28,10 @@ const SettlementPayments = (sequelize, Sequelize) => {
       type: Sequelize.STRING, //""
       defaultValue: "active", // default is active, rejected, paid, requestedChange
     },
+    paymentMethodId: {
+      type: Sequelize.STRING,
+      allowNull: true,
+    },
     data: {
       type: Sequelize.TEXT("medium"),
       allowNull: true,

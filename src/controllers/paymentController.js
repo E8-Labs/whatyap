@@ -28,8 +28,8 @@ export const AddCard = async (req, res) => {
       console.log("Add Card Token is ", token);
       try {
         let card = await stripe.addPaymentMethod(user, token);
-
-        if (card && typeof card.data.brand != "undefined") {
+        console.log("Addcard response ", card);
+        if (card && typeof card.data?.brand != "undefined") {
           res.send({
             status: true,
             message: "Card added",
@@ -225,6 +225,7 @@ export const PaySettlement = async (req, res) => {
             status: "success",
             data: JSON.stringify(charge.payment),
             settlementOfferId: settlement.id,
+            paymentMethodId: charge.paymentMethodId,
           });
 
           settlement.status = "paid";

@@ -131,6 +131,14 @@ const User = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       default: "Email", //Facebook, Apple, Google
     },
+    stripeCustomerIdLive: {
+      type: Sequelize.STRING,
+      allowNull: true,
+    },
+    stripeCustomerIdTest: {
+      type: Sequelize.STRING,
+      allowNull: true,
+    },
   });
 
   User.associate = function (models) {

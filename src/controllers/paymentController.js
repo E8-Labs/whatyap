@@ -8,6 +8,7 @@ import moment from "moment-timezone";
 import axios from "axios";
 import chalk from "chalk";
 import nodemailer from "nodemailer";
+import { ReviewTypes } from "../models/review/reviewtypes.js";
 import UserProfileFullResource from "../resources/userprofilefullresource.js";
 // import UserSubscriptionResource from "../resources/usersubscription.resource.js";
 // import TeamResource from "../resources/teamresource.js";
@@ -25,7 +26,7 @@ export const AddCard = async (req, res) => {
       let token = req.body.source;
       console.log("Add Card Token is ", token);
       try {
-        let card = await stripe.createCard(user, token);
+        let card = await stripe.addPaymentMethod(user, token);
 
         if (card && typeof card.brand != "undefined") {
           res.send({
@@ -41,6 +42,7 @@ export const AddCard = async (req, res) => {
           });
         }
       } catch (error) {
+        console.log(error);
         res.send({
           status: false,
           message: "Card not added",
@@ -79,32 +81,19 @@ export const GetUserPaymentSources = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {
       let user = await db.User.findByPk(authData.user.id);
-      let customer = await stripe.createCustomer(user);
-      const defaultPaymentMethodId =
-        customer.invoice_settings.default_payment_method;
-      let cards = await stripe.loadCards(user);
-      let paymentMethodsWithDefault = [];
-      if (cards) {
-        paymentMethodsWithDefault = cards.map((paymentMethod) => {
-          let card = paymentMethod.card;
-          return {
-            id: paymentMethod.id,
-            brand: card.brand,
-            last4: card.last4,
-            exp_month: card.exp_month,
-            exp_year: card.exp_year,
-            isDefault: paymentMethod.id === defaultPaymentMethodId, // Mark if this is the default
-          };
-        });
-      }
+
+      let cards = await stripe.getPaymentMethods(user);
 
       ////console.log("cards loaded ", cards)
-      res.send({
-        status: true,
-        message: "Card loaded",
-        data: paymentMethodsWithDefault,
-        default: defaultPaymentMethodId,
-      });
+      // if(cards.status == true){
+      res.send(cards);
+      // }
+      // res.send({
+      //   status: true,
+      //   message: "Card loaded",
+      //   data: cards,
+      //   // default: defaultPaymentMethodId,
+      // });
     }
   });
 };
@@ -213,110 +202,61 @@ export const PaySettlement = async (req, res) => {
       try {
         // Fetch the product from the database
 
-        let seller = await db.User.findByPk(product.userId);
+        let seller = await db.User.findByPk(settlement.userId);
 
-        if (!product) {
+        if (!settlement) {
           return res.send({ status: false, message: "Product not found" });
         }
 
-        // Fetch the user profile to get the customerId
-        const user = await db.User.findOne({ where: { id: userId } });
+        let amount = settlement.amount;
+        let taxPer = 5; //5%
+        let taxAmount = (amount * 5) / 100;
+        let totalAmount = amount + taxAmount;
 
-        if (!user) {
-          return res.send({ status: false, message: "Customer not found" });
-        }
-
-        // Check if stripeProductId is empty
-        if (!product.stripeProductId) {
-          // Create a new product in Stripe
-          // const stripeProduct = await stripe.products.create({
-          //   name: product.name,
-          //   description: `Product for ${product.name}`,
-          // });
-          let stripeProduct = await stripe.createProductAndPaymentLink(
-            userId,
-            product.name,
-            `Buy ${product.name} at $${product.productPrice}`,
-            Number(product.productPrice),
-            "image"
-          );
-          // Create a price for the product
-          // const stripePrice = await stripe.prices.create({
-          //   product: stripeProduct.id,
-          //   unit_amount: Math.round(product.productPrice * 100), // Stripe requires the amount in cents
-          //   currency: "usd", // Adjust the currency as needed
-          // });
-
-          // Update the product in the database with the Stripe product and price IDs
-          product.stripeProductId = stripeProduct.productId;
-          product.stripePriceId = stripeProduct.priceId;
-          await product.save();
-        }
-
-        let customer = await stripe.createCustomer(
-          user,
-          "buy product payment controller"
-        );
-        // Create a payment intent for the product
-
-        let defaultPaymentMethodId =
-          customer.invoice_settings.default_payment_method;
-        if (!defaultPaymentMethodId) {
-          // if no default payment method
-          let cards = await stripe.loadCards(user);
-
-          if (cards.length === 0) {
-            return res.send({
-              status: false,
-              message: "No payment source found",
-              data: null,
-            });
-          }
-          defaultPaymentMethodId = cards[0].id;
-        }
-        let stripeInstance = await stripe.getStripe();
-        const paymentIntent = await stripeInstance.paymentIntents.create({
-          amount: Math.round(product.productPrice * 100), // Amount in cents
-          currency: "usd", // Adjust the currency as needed
-          customer: customer.id, // Stripe customer ID
-          payment_method_types: ["card"],
-          payment_method: defaultPaymentMethodId,
-          off_session: true, // Set to true to indicate that this is an off-session payment (like saving cards)
-          confirm: true, // Automatically confirms the payment
-          description: `Purchase of ${product.name}`,
-        });
-        //console.log("payment intent", paymentIntent);
-        if (paymentIntent) {
-          let purchasedProduct = await db.PurchasedProduct.create({
+        let charge = await stripe.ChargeCustomer(totalAmount, user);
+        if (charge.status == true) {
+          let created = await db.SettlementPayments.create({
             userId: user.id,
-            productId: product.id,
-            productPrice: product.productPrice,
-            paymentIntentId: paymentIntent.id,
-            data: JSON.stringify(paymentIntent),
-            status: paymentIntent.status,
-            livemode: paymentIntent.livemode,
+            tax: taxAmount,
+            settlementOfferAmount: amount,
+            totalAmount: totalAmount,
+            status: "success",
+            data: JSON.stringify(charge.payment),
+            settlementOfferId: settlement.id,
           });
-          let sent = await SendPurchaseEmailToCreator(
-            product,
-            purchasedProduct,
-            seller,
-            user
-          );
-          let sentToBuyer = await SendPurchaseEmailToBuyer(
-            product,
-            purchasedProduct,
-            seller,
-            user
-          );
+
+          settlement.status = "paid";
+          await settlement.save();
+
+          // find review and mark complete
+          let review = await db.Review.findByPk(settlement.reviewId);
+          review.reviewStatus = ReviewTypes.Resolved;
+          await review.save();
+          return res.send({
+            status: true,
+            message: "Payment successfull",
+            // clientSecret: paymentIntent.client_secret,
+          });
+        } else {
+          let created = await db.SettlementPayments.create({
+            userId: user.id,
+            tax: taxAmount,
+            settlementOfferAmount: amount,
+            totalAmount: totalAmount,
+            status: "failed",
+            data: JSON.stringify(charge.payment),
+            settlementOfferId: settlement.id,
+          });
+          console.log(charge);
+          return res.send({
+            status: false,
+            message: "Payment was not processed",
+            // clientSecret: paymentIntent.client_secret,
+            // intent: paymentIntent,
+          });
         }
 
         // Respond with the payment intent client secret
-        return res.send({
-          status: true,
-          message: "Payment intent created",
-          // clientSecret: paymentIntent.client_secret,
-          intent: paymentIntent,
-        });
       } catch (error) {
         console.error("Error processing payment:", error);
         return res

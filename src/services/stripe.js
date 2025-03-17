@@ -6,187 +6,162 @@ import db from "../models/index.js";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
+import Stripe from "stripe";
 // import logo from '../assets/applogo.png'
 
 const AppSuffix = "";
 const AppPrefix = "Whaty_";
+const environment = process.env.Environment;
+const IsTestEnvironment = process.env.Environment == "Sandbox";
 
-export const getStripe = async (whoami = "Create Stripe instance") => {
-  let key =
-    process.env.Environment === "Sandbox"
-      ? process.env.STRIPE_SK_TEST
-      : process.env.STRIPE_SK_PRODUCTION;
-  // //console.log("Key is create customer ", key)
-  //console.log("whoami", whoami);
+// Initialize Stripe for both environments
+const stripeTest = new Stripe(process.env.STRIPE_SK_TEST);
+const stripeLive = new Stripe(process.env.STRIPE_SK_PRODUCTION);
 
-  try {
-    const stripe = StripeSdk(key);
-    return stripe;
-  } catch (error) {
-    //console.log("Error createing stripe")
-    return null;
-  }
+/**
+ * Get Stripe client based on environment
+ * @param {string} environment - Either "Sandbox" or "Production".
+ */
+const getStripeClient = () => {
+  //let environment = process.env.Environment;
+  return environment === "Sandbox" ? stripeTest : stripeLive;
 };
 
-export const createCustomer = async (user, whoami = "default") => {
-  let key =
-    process.env.Environment === "Sandbox"
-      ? process.env.STRIPE_SK_TEST
-      : process.env.STRIPE_SK_PRODUCTION;
-  // //console.log("Key is create customer ", key)
-  //console.log("whoami", whoami);
+export const generateStripeCustomerId = async (userId) => {
+  //let environment = process.env.Environment;
+  const stripe = getStripeClient();
 
-  try {
-    const stripe = StripeSdk(key);
-    let alreadyCustomer = await findCustomer(user);
-    //console.log("Customer is ", alreadyCustomer)
-    let u = await db.User.findByPk(user.id);
-    if (alreadyCustomer && alreadyCustomer.data.length >= 1) {
-      //console.log("Already found ");
-      u.customerId = alreadyCustomer.data[0].id;
-      let updated = await u.save();
-      //console.log("Returning Already customer");
-      return alreadyCustomer.data[0];
-    } else {
-      const customer = await stripe.customers.create({
-        name: user.name,
-        email: AppPrefix + user.email,
-        metadata: {
-          id: AppPrefix + user.id,
-          //   dob: user.dob || "",
-          image: user.profile_image || "",
-          //   points: user.points,
-        },
-      });
+  const user = await db.User.findOne({ where: { id: userId } });
+  if (!user) throw new Error("User not found.");
 
-      //console.log("Customer New ");
-      u.customerId = customer.id;
-      await u.save();
-      return customer;
-    }
-
-    // return customer
-  } catch (error) {
-    //console.log(error);
-    return null;
+  // Check if customer ID already exists for the given environment
+  const stripeCustomerIdKey =
+    environment === "Sandbox" ? "stripeCustomerIdTest" : "stripeCustomerIdLive";
+  if (user[stripeCustomerIdKey]) {
+    return user[stripeCustomerIdKey];
   }
+
+  // Create a new customer in Stripe
+  const customer = await stripe.customers.create({
+    email: user.email,
+    name: user.name,
+  });
+
+  // Save the customer ID to the appropriate column
+  user[stripeCustomerIdKey] = customer.id;
+  await user.save();
+
+  return customer.id;
 };
 
-export const findCustomer = async (user) => {
-  let key =
-    process.env.Environment === "Sandbox"
-      ? process.env.STRIPE_SK_TEST
-      : process.env.STRIPE_SK_PRODUCTION;
-  //console.log("Key is find cust", key);
+/**
+ * Get the Stripe customer ID for a user
+ * @param {number} userId - The user's ID.
+ */
+export const getStripeCustomerId = async (userId) => {
+  //let environment = process.env.Environment;
+  const user = await db.User.findOne({ where: { id: userId } });
+  if (!user) throw new Error("User not found.");
 
-  try {
-    const stripe = StripeSdk(key);
-    const customer = await stripe.customers.search({
-      query: `email: '${AppPrefix}${user.email}'`,
-    });
+  const stripeCustomerIdKey =
+    environment === "Sandbox" ? "stripeCustomerIdTest" : "stripeCustomerIdLive";
 
-    // const customer = await stripe.customers.search({
-    //   query: `metadata['id']:'${AppPrefix}${user.id}${AppSuffix}'`,
-    // });
-
-    return customer;
-  } catch (error) {
-    //console.log(error);
-    return null;
+  if (!user[stripeCustomerIdKey]) {
+    return await generateStripeCustomerId(userId);
   }
+
+  return user[stripeCustomerIdKey];
 };
 
 //Tags: AddCard, AddPaymentSource
 //
-export const createCard = async (user, token) => {
-  let key =
-    process.env.Environment === "Sandbox"
-      ? process.env.STRIPE_SK_TEST
-      : process.env.STRIPE_SK_PRODUCTION;
-  console.log("Using key ", key);
-  try {
-    const stripe = StripeSdk(key);
-    let customer = await createCustomer(user, "createcard");
+export const addPaymentMethod = async (user, token) => {
+  const stripe = getStripeClient();
+  const stripeCustomerId = await getStripeCustomerId(user.id);
 
-    // Create a Payment Method using the token
+  try {
     let paymentMethod;
+
+    // Attempt to create a new payment method using the provided token
     try {
       paymentMethod = await stripe.paymentMethods.create({
         type: "card",
         card: { token },
       });
-      //console.log("Added new payment method", paymentMethod)
     } catch (createError) {
-      //console.log("Error creating Payment Method, trying to retrieve existing one");
-      paymentMethod = await stripe.paymentMethods.retrieve(token); // Retrieve using the existing PaymentMethod ID
-      //console.log("Retrieved existing Payment Method:", paymentMethod);
+      // If creation fails, try retrieving the payment method using the token
+      paymentMethod = await stripe.paymentMethods.retrieve(token);
     }
 
-    if (paymentMethod.customer !== customer.id) {
-      //console.log("Attaching Payment Method to customer");
+    // Attach the payment method to the customer if it's not already attached
+    if (paymentMethod.customer !== stripeCustomerId) {
       await stripe.paymentMethods.attach(paymentMethod.id, {
-        customer: customer.id,
+        customer: stripeCustomerId,
       });
     }
 
-    // Check if the Payment Method is chargeable
-    // //console.log(paymentMethod)
-    // Check the CVC and address checks
-    // const { cvc_check, address_postal_code_check } = paymentMethod.card.checks;
-    // if (cvc_check !== 'pass' || address_postal_code_check !== 'pass') {
-    //   //console.log("Card verification failed. CVC or postal code check did not pass.");
-    //   throw new Error("Card verification failed. Please check your card details.");
+    // Perform a $1 authorization to validate the card
+    // const authorization = await stripe.paymentIntents.create({
+    //   amount: 100, // $1.00 in cents
+    //   currency: "usd",
+    //   payment_method: paymentMethod.id,
+    //   customer: stripeCustomerId,
+    //   capture_method: "manual", // Authorize only, do not capture
+    //   confirm: true,
+    //   automatic_payment_methods: {
+    //     enabled: true,
+    //     allow_redirects: "never", // Disable redirects
+    //   },
+    //   //   The return_url is used when the payment flow involves redirect-based authentication methods such as 3D Secure. For cards requiring 3D Secure, the user is redirected to their bank or card issuer's authentication page (e.g., for entering a password or an OTP). Once the authentication is complete, the user is redirected back to your application using the return_url.
+    //   //   return_url: `${process.env.FRONTEND_URL}/payment-result`, // Optional: Provide a return URL for redirect-based methods
+    // });
+
+    // // Check the authorization status
+    // if (authorization.status !== "requires_capture") {
+    //   throw new Error("The card does not have sufficient funds or is invalid.");
     // }
 
-    // Authorize a small amount (like $1) to check for available funds
-    const charge = await stripe.paymentIntents.create({
-      amount: 100, // $1.00 in cents
-      currency: "usd",
-      payment_method: paymentMethod.id,
-      customer: customer.id,
-      capture_method: "manual", // Authorize only, do not capture
-      confirm: true,
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: "never", // Prevents redirect for authentication
-      },
-    });
+    // // Cancel the authorization after successful validation
+    // await stripe.paymentIntents.cancel(authorization.id);
 
-    // Check if the charge was successful
-    if (charge.status !== "requires_capture") {
-      //console.log("Card does not have sufficient funds or is not valid.");
-      throw new Error("The card does not have sufficient funds.");
-    }
+    // Set the payment method as the default if none exists
 
-    // If the charge was successful, reverse the authorization
-    await stripe.paymentIntents.cancel(charge.id);
-    //console.log("Authorization reversed successfully.");
-
-    // Attach the Payment Method to the Customer
-    const customerSource = await stripe.paymentMethods.attach(
-      paymentMethod.id,
-      {
-        customer: customer.id,
-      }
-    );
-
-    // Set this card as the default payment method if none exists
-    const defaultPaymentMethodId =
-      customer.invoice_settings.default_payment_method;
-    if (defaultPaymentMethodId == null) {
-      //console.log("Saving default payment method", customerSource);
-      await stripe.customers.update(customer.id, {
+    const customer = await stripe.customers.retrieve(stripeCustomerId);
+    let isDefault = false;
+    if (!customer.invoice_settings.default_payment_method) {
+      await stripe.customers.update(stripeCustomerId, {
         invoice_settings: {
-          default_payment_method: customerSource.id,
+          default_payment_method: paymentMethod.id,
         },
       });
+      isDefault = true;
     }
 
-    return customerSource.card;
+    const formattedMethod = {
+      paymentMethodId: paymentMethod.id,
+      brand: paymentMethod.card.brand,
+      last4: paymentMethod.card.last4,
+      exp_month: paymentMethod.card.exp_month,
+      exp_year: paymentMethod.card.exp_year,
+      userId: user.id,
+      isDefault: isDefault, //method.id === defaultPaymentMethodId, // Check if it's the default method
+      environment: process.env.Environment,
+    };
+
+    await db.PaymentMethod.create(formattedMethod);
+
+    return {
+      status: true,
+      message: "Payment method added successfully.",
+      data: formattedMethod,
+    };
   } catch (error) {
-    //console.log("Card error");
-    //console.log(error);
-    return { error: error.message };
+    console.error("Error adding payment method:", error.message);
+    return {
+      status: false,
+      message: "Failed to add payment method.",
+      error: error.message,
+    };
   }
 };
 
@@ -197,10 +172,10 @@ export const deleteCard = async (user, cardId) => {
       : process.env.STRIPE_SK_PRODUCTION;
 
   try {
-    const stripe = StripeSdk(key);
-    let customer = await createCustomer(user, "deleteCard");
+    const stripe = getStripeClient();
+    let customer = await getStripeCustomerId(user.id);
 
-    if (!customer || !customer.id) {
+    if (!customer) {
       console.error("Customer not found for user:", user);
       return null;
     }
@@ -222,48 +197,58 @@ export const deleteCard = async (user, cardId) => {
   }
 };
 
-export const loadCards = async (user) => {
-  // Determine the API key based on the environment
-  let key =
-    process.env.Environment === "Sandbox"
-      ? process.env.STRIPE_SK_TEST
-      : process.env.STRIPE_SK_PRODUCTION;
-
-  const stripe = StripeSdk(key);
-
+export const getPaymentMethods = async (user, environment) => {
+  const stripe = getStripeClient(environment);
+  const userId = user.id;
   try {
-    // Find the customer object associated with the user
-    let customers = await findCustomer(user);
-    let customer = null;
-    if (customers && customers.data.length > 0) {
-      customer = customers.data[0];
-    }
+    // Retrieve the Stripe customer ID
+    const stripeCustomerId = await getStripeCustomerId(userId, environment);
 
-    //console.log("Customer in load card is ", customer);
-
-    if (!customer || !customer.id) {
-      console.error("No customer found for user.");
-      return null;
-    }
-
-    // Use the Stripe SDK directly to fetch the payment methods (cards)
-    const paymentMethods = await stripe.paymentMethods.list({
-      customer: customer.id,
-      type: "card", // Filter by card type
-      limit: 10, // Optional limit parameter
+    // Fetch payment methods for the customer
+    const paymentMethodsResponse = await stripe.paymentMethods.list({
+      customer: stripeCustomerId,
+      type: "card",
+      limit: 20,
     });
 
-    // Check if the response has any data
-    if (paymentMethods && paymentMethods.data) {
-      //console.log("Cards loaded successfully:", paymentMethods.data);
-      return paymentMethods.data;
-    } else {
-      console.error("No cards found for this customer.");
-      return null;
+    const paymentMethods = paymentMethodsResponse.data;
+
+    if (!paymentMethods.length) {
+      return {
+        status: false,
+        message: "No payment methods found.",
+        data: [],
+      };
     }
+
+    // Retrieve the customer to determine the default payment method
+    const customer = await stripe.customers.retrieve(stripeCustomerId);
+    const defaultPaymentMethodId =
+      customer.invoice_settings.default_payment_method;
+
+    // Format the response
+    const formattedMethods = paymentMethods.map((method) => ({
+      paymentMethodId: method.id,
+      brand: method.card.brand,
+      last4: method.card.last4,
+      exp_month: method.card.exp_month,
+      exp_year: method.card.exp_year,
+      isDefault: method.id === defaultPaymentMethodId, // Check if it's the default method
+    }));
+
+    return {
+      status: true,
+      message: "Payment methods retrieved successfully.",
+      data: formattedMethods,
+    };
   } catch (error) {
-    console.error("Error loading cards:", error);
-    return null;
+    console.error("Error retrieving payment methods:", error.message);
+    return {
+      status: false,
+      message: "Failed to retrieve payment methods.",
+      error: error.message,
+      data: [],
+    };
   }
 };
 // description: 'Charge for purchasing Product XYZ', // Reason for the charge
@@ -273,54 +258,93 @@ export const loadCards = async (user) => {
 //   product_description: 'This is a detailed description of Product XYZ',
 //   order_id: 'order_987654321',
 // },
+
 export async function ChargeCustomer(
-  amountInCents,
+  amount,
   user,
   title = "",
-  description = ""
+  description = "",
+  paymentMethod = null
 ) {
-  let key =
-    process.env.Environment === "Sandbox"
-      ? process.env.STRIPE_SK_TEST
-      : process.env.STRIPE_SK_PRODUCTION;
+  let amountInCents = amount * 100;
+  let key = IsTestEnvironment
+    ? process.env.STRIPE_SK_TEST
+    : process.env.STRIPE_SK_PRODUCTION;
+
   try {
-    const stripe = StripeSdk(key);
-    let customer = await createCustomer(user, "cancelsub");
-    // Create a payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amountInCents),
-      currency: "usd",
-      customer: customer.id,
-      payment_method_types: ["card"],
-      confirm: true,
-      description: description,
-      metadata: {
-        product_name: title,
-        product_description: description,
-      },
-      off_session: true,
-    });
-
-    // //console.log("Payment intent ", paymentIntent);
-
-    if (paymentIntent.status === "succeeded") {
-      return {
-        status: true,
-        message: "Charge was successful.",
-        reason: "succeeded",
-        payment: paymentIntent,
-      };
-    } else {
-      return {
-        status: false,
-        message: `Charge was not successful. Status: ${paymentIntent.status}`,
-        reason: paymentIntent.status,
-        payment: paymentIntent,
-      };
+    if (!key) {
+      console.error("Stripe API key is missing.");
+      return { status: false, message: "Stripe API key is missing." };
     }
+
+    const stripe = getStripeClient();
+    let customerId = await getStripeCustomerId(user.id);
+
+    if (!customerId) {
+      return { status: false, message: "No customer found for this user." };
+    }
+
+    let paymentMethods = [];
+
+    if (paymentMethod) {
+      // If a payment method is provided, try it first
+      paymentMethods.push(paymentMethod);
+    } else {
+      // Fetch all available payment methods (cards) for the customer
+      const storedPaymentMethods = await stripe.paymentMethods.list({
+        customer: customerId,
+        type: "card",
+      });
+
+      if (storedPaymentMethods?.data?.length) {
+        paymentMethods = storedPaymentMethods.data.map((pm) => pm.id);
+      } else {
+        return {
+          status: false,
+          message: "No saved payment methods found for this customer.",
+        };
+      }
+    }
+
+    // Try each payment method one by one until one succeeds
+    for (let paymentMethodId of paymentMethods) {
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(amountInCents),
+          currency: "usd",
+          customer: customerId,
+          payment_method: paymentMethodId,
+          confirm: true,
+          description: description,
+          capture_method: "automatic",
+          metadata: {
+            product_name: title,
+            product_description: description,
+          },
+          automatic_payment_methods: {
+            enabled: true, // Allow automatic handling of payment methods
+            allow_redirects: "never", // Prevent redirect-based payment methods
+          },
+        });
+
+        if (paymentIntent.status === "succeeded") {
+          return {
+            status: true,
+            message: "Charge was successful.",
+            reason: "succeeded",
+            payment: paymentIntent,
+          };
+        }
+      } catch (error) {
+        console.warn(
+          `Charge failed for payment method ${paymentMethodId}: ${error.message}`
+        );
+      }
+    }
+
+    // If none of the payment methods worked
+    return { status: false, message: "All available payment methods failed." };
   } catch (error) {
-    // Handle errors
-    //console.log("Error Charging ", error);
     return {
       status: false,
       message: `Charge failed: ${error.message}`,
@@ -329,78 +353,6 @@ export async function ChargeCustomer(
     };
   }
 }
-
-// export const deleteCard = async (user, token) => {
-
-//     let key = process.env.Environment === "Sandbox" ? process.env.STRIPE_SK_TEST : process.env.STRIPE_SK_PRODUCTION;
-//     ////console.log("Key is ", key)
-//     const stripe = StripeSdk(key);
-
-//     try {
-//         let customer = await createCustomer(user);
-
-//         const customerSource = await stripe.customers.deleteSource(
-//             customer.id,
-//             {
-//                 source: token,
-//             }
-//         );
-
-//         return customerSource
-//     }
-//     catch (error) {
-//         ////console.log(error)
-//         return null
-//     }
-// }
-
-// export const loadCards = async (user) => {
-//   let key =
-//     process.env.Environment === "Sandbox"
-//       ? process.env.STRIPE_SK_TEST
-//       : process.env.STRIPE_SK_PRODUCTION;
-//   ////console.log("Key is ", key)
-//   const stripe = StripeSdk(key);
-
-//   try {
-//     let customers = await findCustomer(user);
-//     let customer = null;
-//     if (customers && customers.data.length > 0) {
-//       customer = customers.data[0];
-//     }
-//     //console.log("Customer in load card is ", customer);
-
-//     let data = qs.stringify({
-//       limit: "10",
-//     });
-
-//     let config = {
-//       method: "get",
-//       maxBodyLength: Infinity,
-//       url: `https://api.stripe.com/v1/customers/${customer.id}/cards?limit=10`,
-//       headers: {
-//         "Content-Type": "application/x-www-form-urlencoded",
-//         Authorization: `Bearer ${key}`,
-//       },
-//       data: data,
-//     };
-
-//     let response = await axios.request(config);
-//     if (response) {
-//       ////console.log("Load cards request");
-//       ////console.log(JSON.stringify(response.data.data));
-//       return response.data.data;
-//     } else {
-//       ////console.log("Load cards request errored");
-//       ////console.log(error);
-//       return null;
-//     }
-//   } catch (error) {
-//     ////console.log("Load cards request errored out");
-//     ////console.log(error)
-//     return null;
-//   }
-// };
 
 export async function setDefaultPaymentMethod(user, paymentMethodId) {
   try {

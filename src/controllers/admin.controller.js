@@ -104,7 +104,7 @@ export const ResolveOrReject = async (req, res) => {
         if (resolve) {
           review.reviewStatus = ReviewTypes.ResolvedByAdmin;
         } else {
-          review.reviewStatus = ReviewTypes.ResjectedByAdmin;
+          review.reviewStatus = ReviewTypes.RejectedByAdmin;
         }
         let saved = await review.save();
         return res.status(200).send({

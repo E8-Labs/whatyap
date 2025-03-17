@@ -15,6 +15,8 @@ import Subscription from "./auth/Subscription.model.js";
 import SubscriptionHistory from "./auth/SubscriptionHistory.model.js";
 import ReviewImage from "./review/reviewimages.model.js";
 import PurchaseHistory from "./auth/purchase.model.js";
+import PaymentMethod from "./auth/PaymentMethod.js";
+import SettlementPayments from "./review/SettlementPayments.js";
 
 const sequelize = new Sequelize(
   dbConfig.MYSQL_DB,
@@ -82,6 +84,17 @@ models["PurchaseHistory"] = db.PurchaseHistory;
 //make it the last table
 db.Message = Message(sequelize, Sequelize);
 models["Message"] = db.Message;
+
+db.PaymentMethod = PaymentMethod(sequelize, Sequelize);
+models["PaymentMethod"] = db.PaymentMethod;
+db.PaymentMethod.belongsTo(db.User, { foreignKey: "userId", as: "user" });
+db.User.hasMany(db.PaymentMethod, {
+  foreignKey: "userId",
+  as: "paymentMethods",
+});
+
+db.SettlementPayments = SettlementPayments(sequelize, Sequelize);
+models["SettlementPayments"] = db.SettlementPayments;
 
 Object.keys(models).forEach((modelName) => {
   if (models[modelName].associate) {

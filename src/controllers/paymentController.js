@@ -29,11 +29,11 @@ export const AddCard = async (req, res) => {
       try {
         let card = await stripe.addPaymentMethod(user, token);
 
-        if (card && typeof card.brand != "undefined") {
+        if (card && typeof card.data.brand != "undefined") {
           res.send({
             status: true,
             message: "Card added",
-            data: card,
+            data: card.data,
           });
         } else {
           res.send({

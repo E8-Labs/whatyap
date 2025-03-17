@@ -42,6 +42,7 @@ import {
   // BuyProduct,
   MakeDefaultPaymentMethod,
   PaySettlement,
+  GetTransactions,
 } from "../controllers/paymentController.js";
 
 const uploadFiles = multer().fields([
@@ -108,12 +109,12 @@ UserRouter.post(
 );
 UserRouter.post("/paySettlement", verifyJwtToken, uploadFiles, PaySettlement);
 UserRouter.post("/delete_card", verifyJwtToken, uploadFiles, DeleteCard);
-// UserRouter.get(
-//   "/get_transactions",
-//   verifyJwtToken,
-//   uploadFiles,
-//   GetTransactions
-// );
+UserRouter.get(
+  "/get_transactions",
+  verifyJwtToken,
+  uploadFiles,
+  GetTransactions
+);
 UserRouter.get(
   "/list_cards",
   verifyJwtToken,

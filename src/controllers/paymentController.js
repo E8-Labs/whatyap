@@ -14,6 +14,7 @@ import UserProfileFullResource from "../resources/userprofilefullresource.js";
 // import TeamResource from "../resources/teamresource.js";
 // import UserSubscriptionResource from "../resources/UserSubscriptionResource.js";
 import * as stripe from "../services/stripe.js";
+import SettlementTransactionResource from "../resources/SettlementTransactionResource.js";
 
 const User = db.User;
 const Op = db.Sequelize.Op;
@@ -124,17 +125,18 @@ export const GetTransactions = async (req, res) => {
       res.send({ status: false, message: "Unauthenticated user", data: null });
     } else {
       let user = await db.User.findByPk(authData.user.id);
-      let customerId = user.customerId || null;
-      if (customerId) {
-        let transactions = await db.TransactionModel.findAll({
+
+      if (user) {
+        let transactions = await db.SettlementPayments.findAll({
           where: {
-            customerId: customerId,
+            userId: user.id,
+            status: "success",
           },
         });
         return res.send({
           status: true,
           message: "Transactions obtained",
-          data: transactions,
+          data: await SettlementTransactionResource(transactions),
         });
       } else {
         res.send({

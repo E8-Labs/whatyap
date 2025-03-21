@@ -55,6 +55,7 @@ async function getUserData(user, currentUser = null) {
     createdAt: user.createdAt,
     totalSpent: await getTotalSpent(user),
     yapScore3Digit: yapScore3Digit,
+    accountStatus: user.accountStatus,
   };
 
   return UserFullResource;

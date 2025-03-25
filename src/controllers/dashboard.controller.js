@@ -508,14 +508,16 @@ export const SearchUsers = async (req, res) => {
         whereClause += ` AND (\`name\` LIKE '%${searchQuery}%' OR \`driver_license_id\` LIKE '%${searchQuery}%')`;
       }
       if (role) {
-        whereClause += ` AND \`role\` = '${role}'`;
+        if (user.role == "customer") {
+          whereClause += ` AND \`role\` = '${role}'`;
+        }
       } else {
         if (user.role == "customer") {
           role = "business";
+          whereClause += ` AND \`role\` = '${role}'`;
         } else {
-          role = "customer";
+          // role = "customer";
         }
-        whereClause += ` AND \`role\` = '${role}'`;
       }
       if (city) whereClause += ` AND \`city\` = '${city}'`;
       if (state) whereClause += ` AND \`state\` = '${state}'`;

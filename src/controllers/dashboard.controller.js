@@ -69,6 +69,7 @@ export const GetBusinessDashboardData = async (req, res) => {
         state: view.ViewedUser.state,
         phone: view.ViewedUser.phone,
         email: view.ViewedUser.email,
+        role: view.ViewedUser.role,
       }));
       let recentlyViewedData = await UserProfileLiteResource(recentUsers);
 

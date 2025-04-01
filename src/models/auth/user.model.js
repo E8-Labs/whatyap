@@ -172,4 +172,10 @@ export const AccountStatus = {
   Suspended: "suspended",
 };
 
+export const UserRole = {
+  Customer: "customer",
+  Business: "business",
+  Admin: "admin",
+};
+
 export default User;

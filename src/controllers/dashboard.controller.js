@@ -16,7 +16,7 @@ import {
   ensureDirExists,
   uploadMedia,
 } from "../utils/generateThumbnail.js";
-import User, { AccountStatus } from "../models/auth/user.model.js";
+import User, { AccountStatus, UserRole } from "../models/auth/user.model.js";
 import UserProfileViewResource from "../resources/profileviewresource.js";
 import ReviewResource from "../resources/reviewresource.js";
 import { CreateSettlementOfferAndNullifyPast } from "./review.controller.js";
@@ -487,8 +487,8 @@ export const SearchUsers = async (req, res) => {
     offset = 0,
     city,
     state,
-    minScore,
-    maxScore,
+    minYapScore,
+    maxYapScore,
     minReviewCount,
     maxReviewCount,
     role,
@@ -528,6 +528,16 @@ export const SearchUsers = async (req, res) => {
         ).toISOString()}' AND '${new Date(req.query.toDate).toISOString()}'`;
       }
 
+      if (req.query.industry) {
+        const str = req.query.industry;
+        const indArray = str.split(",").map((item) => `'${item.trim()}'`); // Add quotes
+        if (indArray.length > 0) {
+          whereClause += ` AND \`business_industry\` IN (${indArray.join(
+            ","
+          )})`;
+        }
+      }
+
       let havingClause = "";
       if (minReviewCount) {
         havingClause += `HAVING COUNT(Reviews.id) >= ${parseInt(
@@ -546,6 +556,28 @@ export const SearchUsers = async (req, res) => {
             maxReviewCount,
             10
           )}`;
+        }
+      }
+
+      //if it's the business searching then we show transaction range
+      if (user.role == UserRole.Business) {
+        havingClause = "";
+        if (minTransactionAmount) {
+          havingClause += `HAVING SUM(Reviews.amountOfTransaction) >= ${parseFloat(
+            minTransactionAmount
+          )}`;
+        }
+
+        if (maxTransactionAmount) {
+          if (havingClause) {
+            havingClause += ` AND SUM(Reviews.amountOfTransaction) <= ${parseFloat(
+              maxTransactionAmount
+            )}`;
+          } else {
+            havingClause = `HAVING SUM(Reviews.amountOfTransaction) <= ${parseFloat(
+              maxTransactionAmount
+            )}`;
+          }
         }
       }
 

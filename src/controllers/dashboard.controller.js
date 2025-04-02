@@ -489,6 +489,8 @@ export const SearchUsers = async (req, res) => {
     state,
     minYapScore,
     maxYapScore,
+    minTransactionAmount,
+    maxTransactionAmount,
     minReviewCount,
     maxReviewCount,
     role,

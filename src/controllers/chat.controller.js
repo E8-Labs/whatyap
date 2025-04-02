@@ -18,10 +18,12 @@ import MessageResource from "../resources/messageresource.js";
 
 import { addNotification } from "./notification.controller.js";
 import { NotificationType } from "../models/notifications/notificationtypes.js";
+import { UserRole } from "../models/auth/user.model.js";
 
 const createOrFindChat = async (user, review) => {
   try {
     let customerId, businessId;
+    let canDeductCredit = false;
 
     // If the user is the customer, use his ID as customerId, otherwise as businessId
     if (user.role === "customer") {
@@ -30,6 +32,15 @@ const createOrFindChat = async (user, review) => {
     } else {
       businessId = user.id;
       customerId = review.customerId;
+      let chatUser = await db.User.findByPk(review.customerId);
+
+      if (
+        user.role == UserRole.Business &&
+        chatUser.role == UserRole.Customer
+      ) {
+        //if the business messages to customer, deduct one credit
+        canDeductCredit = true;
+      }
     }
 
     let firstReply = false;
@@ -54,6 +65,8 @@ const createOrFindChat = async (user, review) => {
       review.reviewStatus = ReviewTypes.Disputed;
       let saved = await review.save();
       firstReply = true;
+      user.credits_available = user.credits_available - 1;
+      await user.save();
     }
 
     return { status: true, chat: chat, firstReply: firstReply };
@@ -87,6 +100,14 @@ export const CreateChat = async (req, res) => {
         business = chatUser;
         customerId = user.id;
         customer = user;
+      }
+      if (
+        user.role == UserRole.Business &&
+        chatUser.role == UserRole.Customer
+      ) {
+        //if the business messages to customer, deduct one credit
+        user.credits_available = user.credits_available - 1;
+        await user.save();
       }
 
       let chat = await db.Chat.findOne({

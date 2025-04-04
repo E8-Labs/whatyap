@@ -12,6 +12,7 @@ import {
   ResolveOrReject,
   GetSuspendedUsers,
   UnSuspendAccount,
+  SendFeedback,
 } from "../controllers/admin.controller.js";
 
 import {
@@ -42,5 +43,6 @@ AdminRouter.post("/resolveOrReject", verifyJwtToken, ResolveOrReject);
 AdminRouter.post("/deleteAccount", verifyJwtToken, DeleteAccount);
 AdminRouter.post("/suspendAccount", verifyJwtToken, SuspendAccount);
 AdminRouter.post("/unSuspendAccount", verifyJwtToken, UnSuspendAccount);
+AdminRouter.post("/sendFeedback", verifyJwtToken, SendFeedback);
 
 export default AdminRouter;

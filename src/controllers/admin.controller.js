@@ -724,3 +724,32 @@ const getMonthlyUserCounts = async (role = "customer") => {
 
   return monthlyUsers;
 };
+
+export async function SendFeedback(req, res) {
+  JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
+    const { title, feedback } = req.body;
+    if (authData) {
+      try {
+        const user = await db.User.findByPk(authData.user.id);
+        if (!user) {
+          return res
+            .status(200)
+            .send({ status: false, message: "No such user" });
+        }
+
+        return res.send({
+          status: true,
+          message: "Feedback sent",
+          data: null,
+        });
+      } catch (error) {
+        console.log(error);
+        return res.send({
+          status: false,
+          message: "Error sending feedback",
+          data: null,
+        });
+      }
+    }
+  });
+}

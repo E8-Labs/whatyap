@@ -25,6 +25,8 @@ import { NotificationType } from "../models/notifications/notificationtypes.js";
 import { addNotification } from "./notification.controller.js";
 import { SearchHistory } from "./user.controller.js";
 import { where } from "sequelize";
+import { SendEmail } from "../services/MailService.js";
+import { generateWhatYapReviewEmail } from "../../Emails/NewReviewEmail.js";
 
 export const GetBusinessDashboardData = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
@@ -780,7 +782,7 @@ export const AddCustomer = async (req, res) => {
 export const AddReview = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {
-      let user = await db.User.findByPk(authData.user.id);
+      let user = await db.User.findByPk(authData.user.id, { raw: true });
       if (!user) {
         return res.send({ status: false, message: "No such user" });
       }
@@ -799,7 +801,7 @@ export const AddReview = async (req, res) => {
       let mediaUrls = [];
       let thumbUrls = [];
 
-      let customer = await db.User.findByPk(customerId);
+      let customer = await db.User.findByPk(customerId, { raw: true });
       if (!customer) {
         return res.send({ status: false, message: "No such customer" });
       }
@@ -900,6 +902,28 @@ export const AddReview = async (req, res) => {
           console.log("Error sending not Add Review ", error);
         }
 
+        // console.log("Business ", user);
+        console.log("Customer:", customer);
+        console.log("Type:", typeof customer);
+        console.log(
+          "Instance of Sequelize Model:",
+          customer instanceof db.Sequelize.Model
+        ); // should be true
+        let customerName = customer.name;
+        let businessName = user.name;
+        console.log("Has get method:", typeof customer.get); // should be 'function'
+        console.log("Name via dataValues:", customer.dataValues?.name);
+        console.log("Name via get:", customer.get?.("name"));
+        console.log("Name via direct:", customerName);
+        console.log("Business Name", businessName);
+        console.log("All keys:", Object.keys(customer));
+        let emailTemp = generateWhatYapReviewEmail(
+          customerName,
+          businessName,
+          ""
+        );
+
+        let sent = await SendEmail(customer.email, "New Review", emailTemp);
         return res.send({
           status: true,
           message: "Review added",

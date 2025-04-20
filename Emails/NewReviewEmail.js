@@ -59,8 +59,8 @@ export function generateWhatYapReviewEmail(
           <p>Hi ${customerName},</p>
           <p>Big news! 🎊 You’ve just been added and reviewed on <strong>WhatYap</strong> by <strong>${businessName}</strong> — and we think you're going to love what they had to say.</p>
           <p>Whether it’s recognition for your loyalty, amazing service, or just a shoutout for being awesome — this review is all about <strong>you</strong>. 👏</p>
-          <a href="${reviewLink}" class="button">View My Review 🔍</a>
-          <p style="margin-top: 20px;">We built WhatYap to celebrate real people and real stories. Go see what’s been said about you — and if it made you smile, don’t forget to share the love.</p>
+          <p style="margin-top: 20px;">Make an account with this email address to see you're review.</p>
+          <p style="margin-top: 20px;">We built WhatYap to celebrate real people and real stories. Go see what’s been said about you</p>
           <div class="footer">
             <p>Talk soon,<br />The WhatYap Team</p>
           </div>

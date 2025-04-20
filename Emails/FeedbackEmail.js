@@ -1,9 +1,9 @@
-export function generateFeedbackToAdminEmail({
+export function generateFeedbackToAdminEmail(
   userName,
   userEmail,
   userPhone = "",
-  feedbackMessage,
-}) {
+  feedbackMessage
+) {
   return `
       <html>
         <head>

@@ -16,6 +16,7 @@ import ReviewResource from "../resources/reviewresource.js";
 import { AccountStatus } from "../models/auth/user.model.js";
 import UserProfileLiteResource from "../resources/userprofileliteresource.js";
 import { generateFeedbackToAdminEmail } from "../../Emails/FeedbackEmail.js";
+import { SendEmail } from "../services/MailService.js";
 
 export const DeleteAccount = async (req, res) => {
   console.log("Delete Account");

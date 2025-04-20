@@ -739,7 +739,7 @@ export async function SendFeedback(req, res) {
             .send({ status: false, message: "No such user" });
         }
         let feedback = req.body.feedback;
-
+        console.log("Feedback is ", feedback);
         let emailTemp = generateFeedbackToAdminEmail(
           user.name,
           user.email,
@@ -748,6 +748,11 @@ export async function SendFeedback(req, res) {
         );
         let sent = await SendEmail(
           "salman@e8-labs.com",
+          "New feedback",
+          emailTemp
+        );
+        let sent2 = await SendEmail(
+          "info@whatyap.com",
           "New feedback",
           emailTemp
         );

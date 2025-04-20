@@ -15,6 +15,7 @@ import Review from "../models/review/review.model.js";
 import ReviewResource from "../resources/reviewresource.js";
 import { AccountStatus } from "../models/auth/user.model.js";
 import UserProfileLiteResource from "../resources/userprofileliteresource.js";
+import { generateFeedbackToAdminEmail } from "../../Emails/FeedbackEmail.js";
 
 export const DeleteAccount = async (req, res) => {
   console.log("Delete Account");
@@ -736,6 +737,19 @@ export async function SendFeedback(req, res) {
             .status(200)
             .send({ status: false, message: "No such user" });
         }
+        let feedback = req.body.feedback;
+
+        let emailTemp = generateFeedbackToAdminEmail(
+          user.name,
+          user.email,
+          "",
+          feedback
+        );
+        let sent = await SendEmail(
+          "salman@e8-labs.com",
+          "New feedback",
+          emailTemp
+        );
 
         return res.send({
           status: true,

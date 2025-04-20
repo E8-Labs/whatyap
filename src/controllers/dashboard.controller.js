@@ -764,6 +764,8 @@ export const AddCustomer = async (req, res) => {
         plan_status: "free",
       });
 
+      let emailTemp = generateWhatYapReviewEmail(name, authData.user.name, "");
+      let sent = await SendEmail(email, "New Customer", emailTemp);
       return res.send({
         status: true,
         message: "Customer added",
@@ -923,7 +925,7 @@ export const AddReview = async (req, res) => {
           ""
         );
 
-        let sent = await SendEmail(customer.email, "New Review", emailTemp);
+        // let sent = await SendEmail(customer.email, "New Review", emailTemp);
         return res.send({
           status: true,
           message: "Review added",

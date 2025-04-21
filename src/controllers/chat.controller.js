@@ -62,7 +62,7 @@ const createOrFindChat = async (user, review) => {
         lastMessage: "", // Initialize lastMessage empty
       });
       //if customer replies for the first time, then change the status to disputed
-      review.reviewStatus = ReviewTypes.Disputed;
+      // review.reviewStatus = ReviewTypes.Disputed;
       let saved = await review.save();
       firstReply = true;
       user.credits_available = user.credits_available - 1;

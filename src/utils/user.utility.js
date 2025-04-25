@@ -39,14 +39,14 @@ export const getTotalReviews = async function (user) {
   let reviews = await db.Review.count({
     where: {
       customerId: user.id,
-      reviewStatus: {
-        [db.Sequelize.Op.notIn]: [
-          ReviewTypes.Resolved,
-          ReviewTypes.DeletedFromPlatform,
-          ReviewTypes.HiddenFromPlatform,
-          ReviewTypes.ResolvedByAdmin,
-        ],
-      },
+      // reviewStatus: {
+      //   [db.Sequelize.Op.notIn]: [
+      //     ReviewTypes.Resolved,
+      //     ReviewTypes.DeletedFromPlatform,
+      //     ReviewTypes.HiddenFromPlatform,
+      //     ReviewTypes.ResolvedByAdmin,
+      //   ],
+      // },
     },
   });
   console.log("TotalRev ", reviews);

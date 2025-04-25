@@ -1,3 +1,4 @@
+import { UserRole } from "../models/auth/user.model.js";
 import db from "../models/index.js";
 import { ReviewTypes } from "../models/review/reviewtypes.js";
 
@@ -49,6 +50,21 @@ export const getTotalReviews = async function (user) {
       // },
     },
   });
+  if (user.role == UserRole.Business) {
+    reviews = await db.Review.count({
+      where: {
+        userId: user.id,
+        // reviewStatus: {
+        //   [db.Sequelize.Op.notIn]: [
+        //     ReviewTypes.Resolved,
+        //     ReviewTypes.DeletedFromPlatform,
+        //     ReviewTypes.HiddenFromPlatform,
+        //     ReviewTypes.ResolvedByAdmin,
+        //   ],
+        // },
+      },
+    });
+  }
   console.log("TotalRev ", reviews);
   return reviews || 0;
 };

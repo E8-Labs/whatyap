@@ -15,6 +15,7 @@ const Review = (sequelize, Sequelize) => {
     reviewStatus: { type: Sequelize.STRING, defaultValue: "active" },
     newActivityByCustomer: { type: Sequelize.BOOLEAN, defaultValue: false },
     newActivityByBusiness: { type: Sequelize.BOOLEAN, defaultValue: false },
+    disputeReason: { type: Sequelize.STRING, allowNull: true },
   });
 
   // Define associations with distinct aliases

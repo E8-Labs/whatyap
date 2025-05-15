@@ -248,6 +248,7 @@ export const LoadReviews = async (req, res) => {
 export const DisputeReview = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {
+      let disputeReason = req.body.disputeReason || null;
       let user = await db.User.findByPk(authData.user.id);
       if (!user) {
         return res.send({ status: false, message: "No such user" });
@@ -257,6 +258,7 @@ export const DisputeReview = async (req, res) => {
       let review = await db.Review.findByPk(reviewId);
       if (review) {
         review.reviewStatus = ReviewTypes.Disputed;
+        review.disputeReason = disputeReason;
         let saved = await review.save();
         if (saved) {
           let otherUserId = review.userId; //business

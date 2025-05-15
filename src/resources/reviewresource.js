@@ -72,6 +72,7 @@ async function getUserData(review, currentUser = null) {
     reviewStatus: review.reviewStatus,
     newActivityByCustomer: review.newActivityByCustomer,
     newActivityByBusiness: review.newActivityByBusiness,
+    disputeReason: review.disputeReason,
     media: media,
   };
 

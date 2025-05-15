@@ -35,7 +35,7 @@ export function Get3DigitYapScore(numReviews, averageStars) {
   return Math.min(Math.max(Math.floor(finalScore), 100), 999); // Ensure score stays within 3-digit range
 }
 
-export const getTotalReviews = async function (user) {
+export const getTotalReviews = async function (user, activeReviews = false) {
   console.log("Reviews loading ", user.id);
   let reviews = await db.Review.count({
     where: {
@@ -50,6 +50,21 @@ export const getTotalReviews = async function (user) {
       // },
     },
   });
+  if (activeReviews) {
+    reviews = await db.Review.count({
+      where: {
+        customerId: user.id,
+        reviewStatus: {
+          [db.Sequelize.Op.notIn]: [
+            ReviewTypes.Resolved,
+            ReviewTypes.DeletedFromPlatform,
+            ReviewTypes.HiddenFromPlatform,
+            ReviewTypes.ResolvedByAdmin,
+          ],
+        },
+      },
+    });
+  }
   if (user.role == UserRole.Business) {
     reviews = await db.Review.count({
       where: {

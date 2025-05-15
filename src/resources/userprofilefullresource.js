@@ -47,8 +47,13 @@ async function getUserData(user, currentUser = null) {
   //
   totalYapScore = await getTotalYapScore(user);
   reviews = await getTotalReviews(user);
-  if (reviews != 0) {
-    yapScore3Digit = Get3DigitYapScore(reviews, totalYapScore / reviews);
+
+  const reviewsActiveCount = await getTotalReviews(user, true);
+  if (reviewsActiveCount != 0) {
+    yapScore3Digit = Get3DigitYapScore(
+      reviewsActiveCount,
+      totalYapScore / reviewsActiveCount
+    );
   }
   console.log("-------------------------------");
   console.log("Total Yap", totalYapScore);

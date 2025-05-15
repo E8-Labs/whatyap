@@ -249,6 +249,7 @@ export const DisputeReview = async (req, res) => {
   JWT.verify(req.token, process.env.SecretJwtKey, async (error, authData) => {
     if (authData) {
       let disputeReason = req.body.reason || null;
+      console.log("Dispute reason is ", disputeReason);
       let user = await db.User.findByPk(authData.user.id);
       if (!user) {
         return res.send({ status: false, message: "No such user" });

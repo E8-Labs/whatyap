@@ -35,8 +35,12 @@ async function getUserData(user, currentUser = null) {
   // if (user instanceof db.User) {
   totalYapScore = await getTotalYapScore(user);
   reviews = await getTotalReviews(user);
+  const reviewsActiveCount = await getTotalReviews(user, true);
   if (reviews != 0) {
-    yapScore3Digit = Get3DigitYapScore(reviews, totalYapScore / reviews);
+    yapScore3Digit = Get3DigitYapScore(
+      reviewsActiveCount,
+      totalYapScore / reviewsActiveCount
+    );
   }
   // }
   console.log("Getting user lite res");

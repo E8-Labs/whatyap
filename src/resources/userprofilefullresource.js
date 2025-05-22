@@ -100,6 +100,8 @@ async function getUserData(user, currentUser = null) {
     createdAt: user.createdAt,
     totalSpent: await getTotalSpent(user),
     yapScore3Digit: yapScore3Digit,
+    reviewsActiveCount: reviewsActiveCount,
+    average: totalYapScore / reviewsActiveCount,
     unread: unread,
   };
 

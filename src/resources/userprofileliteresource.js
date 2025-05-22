@@ -60,6 +60,9 @@ async function getUserData(user, currentUser = null) {
     totalSpent: await getTotalSpent(user),
     yapScore3Digit: yapScore3Digit,
     accountStatus: user.accountStatus,
+
+    reviewsActiveCount: reviewsActiveCount,
+    average: totalYapScore / reviewsActiveCount,
   };
 
   return UserFullResource;

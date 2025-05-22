@@ -26,7 +26,7 @@ export function Get3DigitYapScore(numReviews, averageStars) {
     return "Invalid input";
   }
 
-  return (1000 / 5) * averageStars;
+  return Math.floor((1000 / 5) * averageStars);
 
   // Base formula for scoring
   const baseScore = averageStars * 200; // Amplify star value for weighting
